@@ -5,12 +5,44 @@ import { Battery, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { devices } = useDevices();
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
+
+  // Check if user is admin (will be loaded from Firestore)
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  // Load admin status from Firestore
+  React.useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!currentUser) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setIsAdmin(userData?.isAdmin === true || userData?.role === 'admin');
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [currentUser]);
 
   const handleSignOut = async () => {
     try {
@@ -44,20 +76,41 @@ export default function Dashboard() {
           <h1 style={{ color: '#2E3A4B' }}>
             🦊 VoltFox Dashboard
           </h1>
-          <button
-            onClick={handleSignOut}
-            style={{
-              padding: '0.5rem 1rem',
-              background: '#FF6B35',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            Sign Out
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#5568d3')}
+                onMouseOut={(e) => (e.currentTarget.style.background = '#667eea')}
+              >
+                🛡️ Admin
+              </button>
+            )}
+            <button
+              onClick={handleSignOut}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#FF6B35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         <div style={{

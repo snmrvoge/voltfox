@@ -44,7 +44,32 @@ const Devices: React.FC = () => {
       </button>
       <div className="page-header">
         <h1>🦊 Meine Geräte</h1>
-        <Link to="/add-device" className="btn-primary">
+        <Link
+          to="/add-device"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '1rem 2rem',
+            background: 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '50px',
+            fontWeight: 'bold',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+            boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.3)';
+          }}
+        >
           <Plus size={20} />
           Gerät hinzufügen
         </Link>
@@ -55,7 +80,32 @@ const Devices: React.FC = () => {
           <Battery size={64} />
           <h2>No devices yet</h2>
           <p>Add your first device to start monitoring batteries</p>
-          <Link to="/add-device" className="btn-primary">
+          <Link
+            to="/add-device"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '1rem 2rem',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '50px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.3)';
+            }}
+          >
             <Plus size={20} />
             Add Your First Device
           </Link>
