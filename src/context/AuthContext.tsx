@@ -162,14 +162,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function login(email: string, password: string) {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      
+
+      // Check if user is blocked
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.isBlocked) {
+          await signOut(auth);
+          toast.error('🚫 Dein Account wurde gesperrt. Kontaktiere den Support.');
+          throw new Error('Account blocked');
+        }
+      }
+
       await updateDoc(doc(db, 'users', result.user.uid), {
         'stats.lastActive': serverTimestamp()
       });
-      
+
       toast.success('Welcome back! 🦊');
       return result.user;
     } catch (error: any) {
+      if (error.message === 'Account blocked') {
+        throw error;
+      }
       handleAuthError(error);
       throw error;
     }

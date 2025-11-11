@@ -119,11 +119,17 @@ function App() {
             <Footer />
             
             {/* Mr. Vision Credit Badge */}
-            <div className="creator-badge">
+            <a
+              href="https://mr-vision.ch"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="creator-badge"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
               <span className="creator-text">Created by</span>
               <span className="creator-name">Mr. Vision</span>
               <span className="creator-emoji">✨</span>
-            </div>
+            </a>
           </div>
         </DeviceProvider>
       </AuthProvider>

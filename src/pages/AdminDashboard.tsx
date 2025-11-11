@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { ArrowLeft, Users, Battery, TrendingUp, Activity } from 'lucide-react';
 
@@ -11,6 +11,8 @@ interface UserStats {
   email: string;
   deviceCount: number;
   devices: any[];
+  isBlocked?: boolean;
+  blockedAt?: string;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -107,7 +109,9 @@ const AdminDashboard: React.FC = () => {
             uid: userId,
             email: userData.email || 'Unknown',
             deviceCount: devices.length,
-            devices
+            devices,
+            isBlocked: userData.isBlocked || false,
+            blockedAt: userData.blockedAt
           });
         } catch (deviceError) {
           console.error(`Error loading devices for user ${userId}:`, deviceError);
@@ -132,6 +136,51 @@ const AdminDashboard: React.FC = () => {
       console.error('Error loading admin data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleBlockUser = async (userId: string, currentlyBlocked: boolean) => {
+    if (!currentUser) return;
+
+    // Prevent blocking yourself
+    if (userId === currentUser.uid) {
+      alert('⚠️ Du kannst dich nicht selbst sperren!');
+      return;
+    }
+
+    const action = currentlyBlocked ? 'entsperren' : 'sperren';
+    const confirmed = window.confirm(
+      `Möchtest du diesen User wirklich ${action}?\n\n` +
+      `${currentlyBlocked ? 'Der User kann sich danach wieder anmelden.' : 'Der User wird gesperrt und kann sich nicht mehr anmelden.'}`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        alert('User nicht gefunden!');
+        return;
+      }
+
+      await setDoc(userDocRef, {
+        ...userDocSnap.data(),
+        isBlocked: !currentlyBlocked,
+        blockedAt: !currentlyBlocked ? new Date().toISOString() : null,
+        blockedBy: !currentlyBlocked ? currentUser.uid : null
+      }, { merge: true });
+
+      console.log(`User ${currentlyBlocked ? 'unblocked' : 'blocked'} successfully`);
+
+      // Reload data to reflect changes
+      loadAdminData();
+
+      alert(`✅ User erfolgreich ${currentlyBlocked ? 'entsperrt' : 'gesperrt'}!`);
+    } catch (error) {
+      console.error('Error toggling user block:', error);
+      alert('❌ Fehler beim Sperren/Entsperren des Users.');
     }
   };
 
@@ -294,8 +343,10 @@ const AdminDashboard: React.FC = () => {
                     textAlign: 'left'
                   }}>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Email</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Status</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Geräte</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Geräte-Liste</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Aktionen</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -309,7 +360,13 @@ const AdminDashboard: React.FC = () => {
                     >
                       <td style={{ padding: '1rem' }}>
                         <div>
-                          <div style={{ fontWeight: 600, color: '#2E3A4B' }}>{user.email}</div>
+                          <div style={{
+                            fontWeight: 600,
+                            color: user.isBlocked ? '#991B1B' : '#2E3A4B',
+                            textDecoration: user.isBlocked ? 'line-through' : 'none'
+                          }}>
+                            {user.email}
+                          </div>
                           <div style={{ fontSize: '0.85rem', color: '#999' }}>
                             UID: {user.uid.substring(0, 8)}...
                           </div>
@@ -319,8 +376,21 @@ const AdminDashboard: React.FC = () => {
                         <span style={{
                           display: 'inline-block',
                           padding: '0.25rem 0.75rem',
-                          background: user.deviceCount > 0 ? '#D1FAE5' : '#FEE2E2',
-                          color: user.deviceCount > 0 ? '#065F46' : '#991B1B',
+                          background: user.isBlocked ? '#FEE2E2' : '#D1FAE5',
+                          color: user.isBlocked ? '#991B1B' : '#065F46',
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          fontSize: '0.9rem'
+                        }}>
+                          {user.isBlocked ? '🚫 Gesperrt' : '✅ Aktiv'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
+                          background: user.deviceCount > 0 ? '#DBEAFE' : '#FEE2E2',
+                          color: user.deviceCount > 0 ? '#1E40AF' : '#991B1B',
                           borderRadius: '12px',
                           fontWeight: 600,
                           fontSize: '0.9rem'
@@ -337,6 +407,34 @@ const AdminDashboard: React.FC = () => {
                         ) : (
                           <span style={{ color: '#999', fontSize: '0.9rem' }}>Keine Geräte</span>
                         )}
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <button
+                          onClick={() => toggleBlockUser(user.uid, user.isBlocked || false)}
+                          disabled={user.uid === currentUser?.uid}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: user.isBlocked ? '#10B981' : '#EF4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            fontSize: '0.85rem',
+                            cursor: user.uid === currentUser?.uid ? 'not-allowed' : 'pointer',
+                            opacity: user.uid === currentUser?.uid ? 0.5 : 1,
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => {
+                            if (user.uid !== currentUser?.uid) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          {user.isBlocked ? '✓ Entsperren' : '✕ Sperren'}
+                        </button>
                       </td>
                     </tr>
                   ))}

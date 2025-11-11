@@ -201,7 +201,20 @@ export default function Login() {
           fontSize: '0.85rem',
           color: '#9CA3AF'
         }}>
-          Created by Mr. Vision ✨
+          <a
+            href="https://mr-vision.ch"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#9CA3AF',
+              textDecoration: 'none',
+              transition: 'color 0.2s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = '#FF6B35')}
+            onMouseOut={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+          >
+            Created by Mr. Vision ✨
+          </a>
         </p>
       </div>
     </div>

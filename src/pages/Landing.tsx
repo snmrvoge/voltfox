@@ -81,7 +81,14 @@ const Landing: React.FC = () => {
           >
             <div className="hero-badge">
               <Star className="w-4 h-4" />
-              <span>Created by Mr. Vision</span>
+              <a
+                href="https://mr-vision.ch"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'inherit', textDecoration: 'none' }}
+              >
+                Created by Mr. Vision
+              </a>
               <Star className="w-4 h-4" />
             </div>
             
@@ -372,7 +379,16 @@ const Landing: React.FC = () => {
             {/* Mr. Vision Credit */}
             <div className="creator-credit">
               <p className="credit-text">
-                Crafted with ❤️ and ⚡ by <span className="credit-name">Mr. Vision</span>
+                Crafted with ❤️ and ⚡ by{' '}
+                <a
+                  href="https://mr-vision.ch"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="credit-name"
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  Mr. Vision
+                </a>
               </p>
             </div>
           </motion.div>
