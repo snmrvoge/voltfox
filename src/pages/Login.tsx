@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth } from '../config/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,7 +20,21 @@ export default function Login() {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Invalid email or password');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Google Sign In error:', err);
+      setError('Google Sign In failed');
       setLoading(false);
     }
   };
@@ -86,6 +100,7 @@ export default function Login() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
+              placeholder="hello@voltfox.app"
             />
           </div>
 
@@ -111,6 +126,7 @@ export default function Login() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
+              placeholder="Enter your password"
             />
           </div>
 
@@ -133,6 +149,37 @@ export default function Login() {
           </button>
         </form>
 
+        <div style={{
+          margin: '2rem 0',
+          textAlign: 'center',
+          color: '#9CA3AF'
+        }}>
+          or
+        </div>
+
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            background: 'white',
+            color: '#2E3A4B',
+            border: '2px solid #E5E7EB',
+            borderRadius: '10px',
+            fontSize: '1rem',
+            fontWeight: '500',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>🌐</span>
+          Continue with Google
+        </button>
+
         <p style={{
           textAlign: 'center',
           marginTop: '2rem',
@@ -146,6 +193,15 @@ export default function Login() {
           }}>
             Sign Up
           </Link>
+        </p>
+
+        <p style={{
+          textAlign: 'center',
+          marginTop: '2rem',
+          fontSize: '0.85rem',
+          color: '#9CA3AF'
+        }}>
+          Created by Mr. Vision ✨
         </p>
       </div>
     </div>

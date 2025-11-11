@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, db } from '../config/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db, googleProvider } from '../config/firebase';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function Signup() {
@@ -33,14 +33,15 @@ export default function Signup() {
     setError('');
 
     try {
-      // Create user in Firebase Auth
+      console.log('Creating user with Firebase Auth...');
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      // Create user document in Firestore
+      console.log('User created:', userCredential.user.uid);
+
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         name: formData.name,
         email: formData.email,
@@ -49,10 +50,35 @@ export default function Signup() {
         devices: []
       });
 
-      // Redirect to dashboard
+      console.log('User profile created in Firestore');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      console.error('Signup error:', err);
+      setError(err.message || 'Failed to create account');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      console.log('Starting Google Sign In...');
+      const result = await signInWithPopup(auth, googleProvider);
+      
+      await setDoc(doc(db, 'users', result.user.uid), {
+        name: result.user.displayName || 'User',
+        email: result.user.email,
+        photoURL: result.user.photoURL || '',
+        createdAt: serverTimestamp(),
+        plan: 'free',
+        devices: []
+      }, { merge: true });
+      
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Google Sign In error:', err);
+      setError('Google Sign In failed: ' + err.message);
       setLoading(false);
     }
   };
@@ -74,7 +100,6 @@ export default function Signup() {
         maxWidth: '400px',
         boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
       }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', color: '#2E3A4B' }}>
             🦊 VoltFox
@@ -84,7 +109,6 @@ export default function Signup() {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div style={{
             background: '#FEE2E2',
@@ -98,7 +122,6 @@ export default function Signup() {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{
@@ -223,7 +246,6 @@ export default function Signup() {
           </button>
         </form>
 
-        {/* Divider */}
         <div style={{
           margin: '2rem 0',
           textAlign: 'center',
@@ -232,9 +254,9 @@ export default function Signup() {
           or
         </div>
 
-        {/* Google Sign In */}
         <button
-          onClick={() => alert('Google Sign In - Coming Soon!')}
+          onClick={handleGoogleSignIn}
+          disabled={loading}
           style={{
             width: '100%',
             padding: '0.75rem',
@@ -244,7 +266,7 @@ export default function Signup() {
             borderRadius: '10px',
             fontSize: '1rem',
             fontWeight: '500',
-            cursor: 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -255,7 +277,6 @@ export default function Signup() {
           Continue with Google
         </button>
 
-        {/* Login Link */}
         <p style={{
           textAlign: 'center',
           marginTop: '2rem',
@@ -271,7 +292,6 @@ export default function Signup() {
           </Link>
         </p>
 
-        {/* Mr. Vision Credit */}
         <p style={{
           textAlign: 'center',
           marginTop: '2rem',

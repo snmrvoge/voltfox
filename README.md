@@ -1,6 +1,7 @@
-# Getting Started with Create React App
+# 🦊 VoltFox - Smart Battery Guardian
+## Created by Mr. Vision ✨
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Never lose a device to dead batteries again! VoltFox watches over your batteries 24/7 with AI-powered predictions and smart alerts.
 
 ## Available Scripts
 
