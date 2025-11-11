@@ -1,5 +1,8 @@
 // src/utils/aiService.ts
-// OpenAI GPT-4 Vision Integration for Device Recognition
+// OpenAI GPT-4 Vision Integration for Device Recognition via Firebase Cloud Function
+
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../config/firebase';
 
 export interface DeviceRecognitionResult {
   deviceType?: string;
@@ -12,15 +15,72 @@ export interface DeviceRecognitionResult {
 }
 
 /**
- * Analyzes an image using OpenAI GPT-4 Vision to extract device information
+ * Analyzes an image using OpenAI GPT-4 Vision via secure Firebase Cloud Function
  * @param imageFile - The image file to analyze
  * @returns Promise with device recognition results
  */
 export async function analyzeDeviceImage(imageFile: File): Promise<DeviceRecognitionResult> {
+  // Use Cloud Function for secure API calls (API key stays on server)
+  const useCloudFunction = true; // Set to false for local dev with direct API
+
+  if (useCloudFunction) {
+    return analyzeViaCloudFunction(imageFile);
+  } else {
+    return analyzeViaDirectAPI(imageFile);
+  }
+}
+
+/**
+ * Secure method: Use Firebase Cloud Function (recommended for production)
+ * API key stays on server, never exposed to client
+ */
+async function analyzeViaCloudFunction(imageFile: File): Promise<DeviceRecognitionResult> {
+  try {
+    // Convert image to base64
+    const base64Image = await fileToBase64(imageFile);
+
+    // Get Firebase Functions instance
+    const functions = getFunctions(app);
+
+    // Call the cloud function
+    const analyzeImage = httpsCallable<
+      { base64Image: string; fileType: string },
+      DeviceRecognitionResult
+    >(functions, 'analyzeDeviceImage');
+
+    const result = await analyzeImage({
+      base64Image,
+      fileType: imageFile.type,
+    });
+
+    return result.data;
+  } catch (error: any) {
+    console.error('Cloud Function Error:', error);
+
+    // Parse Firebase Functions error
+    if (error.code === 'functions/unauthenticated') {
+      throw new Error('Bitte erst anmelden um KI-Analyse zu nutzen');
+    }
+
+    if (error.code === 'functions/resource-exhausted') {
+      throw new Error('OpenAI API Quota überschritten. Bitte Billing prüfen.');
+    }
+
+    throw new Error(error.message || 'KI-Analyse fehlgeschlagen');
+  }
+}
+
+/**
+ * Direct API method (fallback for local development)
+ * WARNING: API key is exposed in frontend code - only use for development!
+ */
+async function analyzeViaDirectAPI(imageFile: File): Promise<DeviceRecognitionResult> {
   const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
 
   if (!apiKey || apiKey === 'your_openai_api_key_here') {
-    throw new Error('OpenAI API key nicht konfiguriert. Bitte REACT_APP_OPENAI_API_KEY in .env.local setzen.');
+    throw new Error(
+      'OpenAI API key nicht konfiguriert. Bitte REACT_APP_OPENAI_API_KEY in .env.local setzen.'
+    );
   }
 
   // Convert image to base64
@@ -50,37 +110,41 @@ Important:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',  // gpt-4o has vision capabilities
+        model: 'gpt-4o', // gpt-4o has vision capabilities
         messages: [
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: prompt
+                text: prompt,
               },
               {
                 type: 'image_url',
                 image_url: {
                   url: `data:${imageFile.type};base64,${base64Image}`,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
+                  detail: 'high',
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 500,
-        temperature: 0.2  // Lower temperature for more consistent results
-      })
+        temperature: 0.2, // Lower temperature for more consistent results
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('OpenAI API Error:', errorData);
-      throw new Error(`OpenAI API Fehler: ${response.status} - ${errorData.error?.message || response.statusText}`);
+      throw new Error(
+        `OpenAI API Fehler: ${response.status} - ${
+          errorData.error?.message || response.statusText
+        }`
+      );
     }
 
     const data = await response.json();
@@ -93,28 +157,25 @@ Important:
     console.log('OpenAI Response:', content);
 
     // Parse JSON response
-    let result: DeviceRecognitionResult;
     try {
       // Try to extract JSON from the response (in case there's extra text)
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : content;
       const parsed = JSON.parse(jsonString);
 
-      result = {
+      return {
         deviceType: parsed.deviceType || undefined,
         deviceName: parsed.deviceName || undefined,
         brand: parsed.brand || undefined,
         model: parsed.model || undefined,
         batteryType: parsed.batteryType || undefined,
         confidence: parsed.confidence || 50,
-        rawResponse: content
+        rawResponse: content,
       };
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
       throw new Error('Konnte AI-Antwort nicht verarbeiten. Bitte versuche es erneut.');
     }
-
-    return result;
   } catch (error: any) {
     console.error('AI Analysis Error:', error);
     throw error;
@@ -122,7 +183,7 @@ Important:
 }
 
 /**
- * Converts a File to base64 string
+ * Converts a File to base64 string (without data URL prefix)
  */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -146,8 +207,16 @@ export function mapToDeviceType(aiType: string | undefined): string {
 
   const normalized = aiType.toLowerCase();
   const validTypes = [
-    'drone', 'camera', 'laptop', 'phone', 'tablet',
-    'smartwatch', 'headphones', 'speaker', 'e-bike', 'other'
+    'drone',
+    'camera',
+    'laptop',
+    'phone',
+    'tablet',
+    'smartwatch',
+    'headphones',
+    'speaker',
+    'e-bike',
+    'other',
   ];
 
   return validTypes.includes(normalized) ? normalized : 'other';
