@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules für VoltFox
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Device Images - nur eigene Bilder
+    match /device-images/{userId}/{allPaths=**} {
+      // Nur angemeldete User können ihre eigenen Bilder hochladen
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB
+                   && request.resource.contentType.matches('image/.*');  // Nur Bilder
+    }
+
+    // Alles andere ist verboten
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

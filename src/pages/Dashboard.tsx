@@ -10,6 +10,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { devices } = useDevices();
+  const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
 
   const handleSignOut = async () => {
     try {
@@ -138,6 +139,47 @@ export default function Dashboard() {
             <div className="devices-grid">
               {devices.slice(0, 3).map((device) => (
                 <div key={device.id} className="device-card">
+                  {/* Device Image/Icon */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    {device.imageUrl ? (
+                      <img
+                        src={device.imageUrl}
+                        alt={device.name}
+                        onClick={() => setLightboxImage(device.imageUrl || null)}
+                        style={{
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '12px',
+                          objectFit: 'cover',
+                          border: '3px solid var(--vf-primary)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s'
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                        onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                      />
+                    ) : (
+                      <div style={{
+                        fontSize: '3.5rem',
+                        width: '80px',
+                        height: '80px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        {device.icon || '🔋'}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="device-header">
                     <h3>{device.name}</h3>
                     <span className={`battery-level level-${device.currentCharge > 50 ? 'good' : device.currentCharge > 20 ? 'medium' : 'low'}`}>
@@ -167,6 +209,61 @@ export default function Dashboard() {
         }}>
           Created by Mr. Vision ✨
         </p>
+
+        {/* Lightbox Modal */}
+        {lightboxImage && (
+          <div
+            onClick={() => setLightboxImage(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.9)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              cursor: 'pointer',
+              animation: 'fadeIn 0.3s'
+            }}
+          >
+            <img
+              src={lightboxImage}
+              alt="Vergrößertes Bild"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                borderRadius: '15px',
+                boxShadow: '0 10px 50px rgba(0,0,0,0.5)',
+                cursor: 'default'
+              }}
+            />
+            <button
+              onClick={() => setLightboxImage(null)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ interface Device {
   name: string;
   type: string;
   icon: string;
+  imageUrl?: string;  // Custom uploaded image
   brand?: string;
   model?: string;
   voltage?: number;
