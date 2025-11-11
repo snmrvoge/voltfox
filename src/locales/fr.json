@@ -1,0 +1,229 @@
+{
+  "common": {
+    "appName": "VoltFox",
+    "tagline": "Restez rusé, restez chargé",
+    "createdBy": "Créé par Mr. Vision"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "devices": "Appareils",
+    "settings": "Paramètres",
+    "admin": "Admin",
+    "signOut": "Se déconnecter"
+  },
+  "landing": {
+    "hero": {
+      "title": "Ne perdez plus jamais un appareil à cause de batteries déchargées",
+      "description": "Le renard intelligent surveille vos batteries 24h/24 et 7j/7 avec des prévisions alimentées par l'IA et des alertes instantanées. Rejoignez 50 000+ utilisateurs qui ne s'inquiètent plus jamais des batteries déchargées.",
+      "startMonitoring": "Commencer gratuitement",
+      "watchDemo": "Voir la démo"
+    },
+    "stats": {
+      "monitored": "Batteries surveillées",
+      "saved": "Appareils sauvés",
+      "rating": "Note de l'app",
+      "monitoring": "Surveillance"
+    },
+    "features": {
+      "title": "Pourquoi VoltFox?",
+      "subtitle": "Tout ce dont vous avez besoin pour garder vos batteries saines et vos appareils en marche",
+      "smartMonitoring": {
+        "title": "Surveillance intelligente",
+        "description": "Les prévisions alimentées par l'IA gardent vos batteries en bonne santé"
+      },
+      "deviceProtection": {
+        "title": "Protection des appareils",
+        "description": "Ne perdez plus jamais un appareil à cause de batteries déchargées"
+      },
+      "instantAlerts": {
+        "title": "Alertes instantanées",
+        "description": "Soyez averti avant que les problèmes ne surviennent"
+      },
+      "healthAnalytics": {
+        "title": "Analyses de santé",
+        "description": "Suivez les performances de la batterie dans le temps"
+      },
+      "communityInsights": {
+        "title": "Aperçus communautaires",
+        "description": "Apprenez de millions de données de batteries"
+      },
+      "insuranceReady": {
+        "title": "Prêt pour l'assurance",
+        "description": "Documentez les valeurs de vos appareils pour la couverture"
+      }
+    },
+    "howItWorks": {
+      "title": "Simple comme 1-2-3",
+      "subtitle": "Commencez en quelques minutes",
+      "step1": {
+        "title": "Ajoutez vos appareils",
+        "description": "Parlez à VoltFox de vos batteries - téléphones, drones, outils, tout!"
+      },
+      "step2": {
+        "title": "Recevez des alertes intelligentes",
+        "description": "Notre IA apprend vos habitudes et vous alerte avant que les problèmes ne surviennent"
+      },
+      "step3": {
+        "title": "Sauvez vos appareils",
+        "description": "Ne perdez plus jamais d'équipement coûteux à cause de pannes de batterie évitables"
+      }
+    },
+    "testimonials": {
+      "title": "Aimé par les utilisateurs du monde entier"
+    },
+    "pricing": {
+      "title": "Tarification simple et transparente",
+      "subtitle": "Commencez gratuitement, passez à la version supérieure quand vous en avez besoin",
+      "free": {
+        "title": "Gratuit",
+        "price": "0",
+        "period": "/mois",
+        "features": {
+          "devices": "Jusqu'à 5 appareils",
+          "monitoring": "Surveillance de base",
+          "alerts": "Alertes par e-mail",
+          "history": "Historique de 7 jours"
+        },
+        "cta": "Commencer gratuitement"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Le plus populaire",
+        "price": "9",
+        "period": "/mois",
+        "features": {
+          "devices": "Appareils illimités",
+          "ai": "Prévisions IA",
+          "push": "Notifications push",
+          "history": "Historique complet",
+          "reports": "Rapports d'assurance",
+          "support": "Support prioritaire"
+        },
+        "cta": "Essai Pro gratuit"
+      },
+      "business": {
+        "title": "Business",
+        "price": "49",
+        "period": "/mois",
+        "features": {
+          "everything": "Tout dans Pro",
+          "team": "Gestion d'équipe",
+          "api": "Accès API",
+          "integrations": "Intégrations personnalisées",
+          "sla": "Garantie SLA",
+          "dedicated": "Support dédié"
+        },
+        "cta": "Contacter les ventes"
+      }
+    },
+    "cta": {
+      "title": "Prêt à rester rusé?",
+      "subtitle": "Rejoignez des milliers de personnes qui ne s'inquiètent plus des batteries déchargées",
+      "button": "Commencer la surveillance gratuite",
+      "note": "Aucune carte de crédit requise • Configuration en 2 minutes • Annulation à tout moment",
+      "credit": "Conçu avec ❤️ et ⚡ par"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour!",
+      "email": "E-mail",
+      "emailPlaceholder": "bonjour@voltfox.app",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "submit": "Se connecter",
+      "submitting": "Connexion en cours...",
+      "or": "ou",
+      "google": "Continuer avec Google",
+      "noAccount": "Vous n'avez pas de compte?",
+      "signUp": "S'inscrire"
+    },
+    "signup": {
+      "title": "Créez votre compte",
+      "name": "Votre nom",
+      "namePlaceholder": "Mr. Vision",
+      "email": "Adresse e-mail",
+      "emailPlaceholder": "bonjour@voltfox.app",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Min. 6 caractères",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPlaceholder": "Répétez le mot de passe",
+      "submit": "Créer un compte 🚀",
+      "submitting": "Création du compte...",
+      "or": "ou",
+      "google": "Continuer avec Google",
+      "hasAccount": "Vous avez déjà un compte?",
+      "signIn": "Se connecter"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord VoltFox",
+    "welcome": "Bienvenue sur VoltFox!",
+    "loggedInAs": "Connecté en tant que:",
+    "addFirstDevice": "Ajoutez votre premier appareil",
+    "addDevice": "Ajouter un appareil",
+    "stats": {
+      "devices": "Appareils",
+      "healthy": "sains",
+      "warnings": "Avertissements",
+      "critical": "critiques",
+      "batteryHealth": "Santé de la batterie",
+      "average": "Moyenne"
+    },
+    "yourDevices": "Vos appareils",
+    "viewAll": "Voir tout",
+    "health": "Santé:",
+    "lowBattery": "Batterie faible!"
+  },
+  "devices": {
+    "title": "Vos appareils",
+    "noDevices": "Aucun appareil pour le moment",
+    "addFirstDevice": "Ajoutez votre premier appareil pour commencer la surveillance",
+    "health": "Santé:",
+    "voltage": "Tension:",
+    "capacity": "Capacité:",
+    "charge": "Charge:",
+    "lastCharged": "Dernière charge:",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet appareil?",
+    "lowBattery": "Batterie faible!"
+  },
+  "admin": {
+    "title": "Tableau de bord Admin",
+    "subtitle": "Aperçu de tous les utilisateurs et appareils VoltFox",
+    "backToDashboard": "Retour au tableau de bord",
+    "stats": {
+      "users": "Utilisateurs",
+      "registeredAccounts": "Comptes enregistrés",
+      "devices": "Appareils",
+      "totalRegistered": "Total enregistré",
+      "average": "Moyenne",
+      "devicesPerUser": "Appareils par utilisateur"
+    },
+    "userOverview": "Aperçu des utilisateurs",
+    "noUsers": "Aucun utilisateur enregistré pour le moment.",
+    "table": {
+      "email": "E-mail",
+      "status": "Statut",
+      "devices": "Appareils",
+      "deviceList": "Liste des appareils",
+      "actions": "Actions",
+      "active": "Actif",
+      "blocked": "Bloqué",
+      "noDevices": "Aucun appareil",
+      "block": "Bloquer",
+      "unblock": "Débloquer"
+    },
+    "blockUser": {
+      "cannotBlockSelf": "⚠️ Vous ne pouvez pas vous bloquer vous-même!",
+      "confirmBlock": "Voulez-vous vraiment bloquer cet utilisateur?\n\nL'utilisateur sera bloqué et ne pourra plus se connecter.",
+      "confirmUnblock": "Voulez-vous vraiment débloquer cet utilisateur?\n\nL'utilisateur pourra se reconnecter.",
+      "successBlock": "✅ Utilisateur bloqué avec succès!",
+      "successUnblock": "✅ Utilisateur débloqué avec succès!",
+      "error": "❌ Erreur lors du blocage/déblocage de l'utilisateur.",
+      "userNotFound": "Utilisateur introuvable!"
+    },
+    "footer": "Accès administrateur uniquement"
+  }
+}

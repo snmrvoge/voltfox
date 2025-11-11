@@ -1,6 +1,7 @@
 // src/pages/Dashboard.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Battery, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
@@ -10,6 +11,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentUser, logout } = useAuth();
   const { devices } = useDevices();
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
@@ -74,7 +76,7 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
           <h1 style={{ color: '#2E3A4B' }}>
-            🦊 VoltFox Dashboard
+            🦊 {t('dashboard.title')}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             {isAdmin && (
@@ -93,7 +95,7 @@ export default function Dashboard() {
                 onMouseOver={(e) => (e.currentTarget.style.background = '#5568d3')}
                 onMouseOut={(e) => (e.currentTarget.style.background = '#667eea')}
               >
-                🛡️ Admin
+                🛡️ {t('nav.admin')}
               </button>
             )}
             <button
@@ -108,7 +110,7 @@ export default function Dashboard() {
                 fontWeight: 'bold'
               }}
             >
-              Sign Out
+              {t('nav.signOut')}
             </button>
           </div>
         </div>
@@ -121,10 +123,10 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
           <h2 style={{ color: '#2E3A4B', marginBottom: '1rem' }}>
-            Willkommen bei VoltFox!
+            {t('dashboard.welcome')}
           </h2>
           <p style={{ color: '#666', marginBottom: '2rem' }}>
-            {currentUser?.email ? `Angemeldet als: ${currentUser.email}` : 'Füge dein erstes Gerät hinzu'}
+            {currentUser?.email ? `${t('dashboard.loggedInAs')} ${currentUser.email}` : t('dashboard.addFirstDevice')}
           </p>
           <Link to="/add-device" style={{
             display: 'inline-block',
@@ -135,7 +137,7 @@ export default function Dashboard() {
             borderRadius: '50px',
             fontWeight: 'bold'
           }}>
-            + Gerät hinzufügen
+            + {t('dashboard.addDevice')}
           </Link>
         </div>
 
@@ -151,9 +153,9 @@ export default function Dashboard() {
             borderRadius: '15px',
             borderLeft: '4px solid #10B981'
           }}>
-            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>Geräte</h3>
+            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>{t('dashboard.stats.devices')}</h3>
             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10B981' }}>{devices.length}</p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>{activeDevices.length} gesund</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{activeDevices.length} {t('dashboard.stats.healthy')}</p>
           </div>
 
           <div style={{
@@ -162,9 +164,9 @@ export default function Dashboard() {
             borderRadius: '15px',
             borderLeft: '4px solid #F59E0B'
           }}>
-            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>Warnungen</h3>
+            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>{t('dashboard.stats.warnings')}</h3>
             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#F59E0B' }}>{warnings}</p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>{critical} kritisch</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{critical} {t('dashboard.stats.critical')}</p>
           </div>
 
           <div style={{
@@ -173,20 +175,20 @@ export default function Dashboard() {
             borderRadius: '15px',
             borderLeft: '4px solid #3B82F6'
           }}>
-            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>Batterie-Gesundheit</h3>
+            <h3 style={{ color: '#2E3A4B', marginBottom: '0.5rem' }}>{t('dashboard.stats.batteryHealth')}</h3>
             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#3B82F6' }}>
               {devices.length > 0 ? Math.round(devices.reduce((acc, d) => acc + d.health, 0) / devices.length) : 0}%
             </p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Durchschnitt</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('dashboard.stats.average')}</p>
           </div>
         </div>
 
         {devices.length > 0 && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ color: '#2E3A4B' }}>Deine Geräte</h2>
+              <h2 style={{ color: '#2E3A4B' }}>{t('dashboard.yourDevices')}</h2>
               <Link to="/devices" style={{ color: '#FF6B35', textDecoration: 'none', fontWeight: 'bold' }}>
-                Alle anzeigen →
+                {t('dashboard.viewAll')} →
               </Link>
             </div>
             <div className="devices-grid">
@@ -241,11 +243,11 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <p className="device-type">{device.type}</p>
-                  <p className="device-health">Gesundheit: {device.health}%</p>
+                  <p className="device-health">{t('dashboard.health')} {device.health}%</p>
                   {device.currentCharge < 20 && (
                     <div className="device-warning">
                       <AlertCircle size={16} />
-                      Niedriger Ladestand!
+                      {t('dashboard.lowBattery')}
                     </div>
                   )}
                 </div>
@@ -272,7 +274,7 @@ export default function Dashboard() {
             onMouseOver={(e) => (e.currentTarget.style.color = '#FF6B35')}
             onMouseOut={(e) => (e.currentTarget.style.color = '#9CA3AF')}
           >
-            Created by Mr. Vision ✨
+            {t('common.createdBy')} ✨
           </a>
         </p>
 

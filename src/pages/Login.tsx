@@ -1,11 +1,13 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { auth, googleProvider } from '../config/firebase';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -58,10 +60,10 @@ export default function Login() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', color: '#2E3A4B' }}>
-            🦊 VoltFox
+            🦊 {t('common.appName')}
           </h1>
           <p style={{ color: '#666', marginTop: '0.5rem' }}>
-            Welcome back!
+            {t('auth.login.title')}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export default function Login() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Email
+              {t('auth.login.email')}
             </label>
             <input
               type="email"
@@ -100,7 +102,7 @@ export default function Login() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="hello@voltfox.app"
+              placeholder={t('auth.login.emailPlaceholder')}
             />
           </div>
 
@@ -111,7 +113,7 @@ export default function Login() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Password
+              {t('auth.login.password')}
             </label>
             <input
               type="password"
@@ -126,7 +128,7 @@ export default function Login() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="Enter your password"
+              placeholder={t('auth.login.passwordPlaceholder')}
             />
           </div>
 
@@ -145,7 +147,7 @@ export default function Login() {
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('auth.login.submitting') : t('auth.login.submit')}
           </button>
         </form>
 
@@ -154,7 +156,7 @@ export default function Login() {
           textAlign: 'center',
           color: '#9CA3AF'
         }}>
-          or
+          {t('auth.login.or')}
         </div>
 
         <button
@@ -177,7 +179,7 @@ export default function Login() {
           }}
         >
           <span style={{ fontSize: '1.2rem' }}>🌐</span>
-          Continue with Google
+          {t('auth.login.google')}
         </button>
 
         <p style={{
@@ -185,13 +187,13 @@ export default function Login() {
           marginTop: '2rem',
           color: '#666'
         }}>
-          Don't have an account?{' '}
+          {t('auth.login.noAccount')}{' '}
           <Link to="/signup" style={{
             color: '#FF6B35',
             fontWeight: 'bold',
             textDecoration: 'none'
           }}>
-            Sign Up
+            {t('auth.login.signUp')}
           </Link>
         </p>
 
@@ -213,7 +215,7 @@ export default function Login() {
             onMouseOver={(e) => (e.currentTarget.style.color = '#FF6B35')}
             onMouseOut={(e) => (e.currentTarget.style.color = '#9CA3AF')}
           >
-            Created by Mr. Vision ✨
+            {t('common.createdBy')} ✨
           </a>
         </p>
       </div>

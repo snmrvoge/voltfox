@@ -1,47 +1,50 @@
 // src/pages/Landing.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Battery, Shield, Zap, TrendingUp, Users, Award, ArrowRight, Star, Check } from 'lucide-react';
 
 const Landing: React.FC = () => {
+  const { t } = useTranslation();
+
   const stats = [
-    { value: '50k+', label: 'Batteries Monitored' },
-    { value: '2k+', label: 'Devices Saved' },
-    { value: '4.9', label: 'App Rating' },
-    { value: '24/7', label: 'Monitoring' }
+    { value: '50k+', label: t('landing.stats.monitored') },
+    { value: '2k+', label: t('landing.stats.saved') },
+    { value: '4.9', label: t('landing.stats.rating') },
+    { value: '24/7', label: t('landing.stats.monitoring') }
   ];
 
   const features = [
     {
       icon: <Battery className="w-6 h-6" />,
-      title: 'Smart Monitoring',
-      description: 'AI-powered predictions keep your batteries healthy'
+      title: t('landing.features.smartMonitoring.title'),
+      description: t('landing.features.smartMonitoring.description')
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: 'Device Protection',
-      description: 'Never lose a device to dead batteries again'
+      title: t('landing.features.deviceProtection.title'),
+      description: t('landing.features.deviceProtection.description')
     },
     {
       icon: <Zap className="w-6 h-6" />,
-      title: 'Instant Alerts',
-      description: 'Get notified before problems arise'
+      title: t('landing.features.instantAlerts.title'),
+      description: t('landing.features.instantAlerts.description')
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
-      title: 'Health Analytics',
-      description: 'Track battery performance over time'
+      title: t('landing.features.healthAnalytics.title'),
+      description: t('landing.features.healthAnalytics.description')
     },
     {
       icon: <Users className="w-6 h-6" />,
-      title: 'Community Insights',
-      description: 'Learn from millions of battery data points'
+      title: t('landing.features.communityInsights.title'),
+      description: t('landing.features.communityInsights.description')
     },
     {
       icon: <Award className="w-6 h-6" />,
-      title: 'Insurance Ready',
-      description: 'Document your device values for coverage'
+      title: t('landing.features.insuranceReady.title'),
+      description: t('landing.features.insuranceReady.description')
     }
   ];
 
@@ -87,34 +90,33 @@ const Landing: React.FC = () => {
                 rel="noopener noreferrer"
                 style={{ color: 'inherit', textDecoration: 'none' }}
               >
-                Created by Mr. Vision
+                {t('common.createdBy')}
               </a>
               <Star className="w-4 h-4" />
             </div>
-            
+
             <h1 className="hero-title">
               <span className="fox-emoji">🦊</span>
-              <span className="gradient-text">VoltFox</span>
+              <span className="gradient-text">{t('common.appName')}</span>
             </h1>
-            
-            <p className="hero-tagline">Stay Foxy, Stay Charged</p>
-            
+
+            <p className="hero-tagline">{t('common.tagline')}</p>
+
             <h2 className="hero-subtitle">
-              Never Lose a Device to Dead Batteries
+              {t('landing.hero.title')}
             </h2>
-            
+
             <p className="hero-description">
-              The smart fox watches over your batteries 24/7 with AI-powered predictions 
-              and instant alerts. Join 50,000+ users who never worry about dead batteries.
+              {t('landing.hero.description')}
             </p>
             
             <div className="hero-actions">
               <Link to="/signup" className="btn btn-primary btn-large">
-                Start Free Monitoring
+                {t('landing.hero.startMonitoring')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
               <Link to="/demo" className="btn btn-secondary btn-large">
-                Watch Demo
+                {t('landing.hero.watchDemo')}
               </Link>
             </div>
             
@@ -145,9 +147,9 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="section-title">Why VoltFox?</h2>
+            <h2 className="section-title">{t('landing.features.title')}</h2>
             <p className="section-subtitle">
-              Everything you need to keep your batteries healthy and devices running
+              {t('landing.features.subtitle')}
             </p>
           </motion.div>
           
@@ -181,8 +183,8 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="section-title">Simple as 1-2-3</h2>
-            <p className="section-subtitle">Get started in minutes</p>
+            <h2 className="section-title">{t('landing.howItWorks.title')}</h2>
+            <p className="section-subtitle">{t('landing.howItWorks.subtitle')}</p>
           </motion.div>
           
           <div className="steps">
@@ -193,11 +195,11 @@ const Landing: React.FC = () => {
               viewport={{ once: true }}
             >
               <div className="step-number">1</div>
-              <h3>Add Your Devices</h3>
-              <p>Tell VoltFox about your batteries - phones, drones, tools, anything!</p>
+              <h3>{t('landing.howItWorks.step1.title')}</h3>
+              <p>{t('landing.howItWorks.step1.description')}</p>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="step"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -205,11 +207,11 @@ const Landing: React.FC = () => {
               transition={{ delay: 0.1 }}
             >
               <div className="step-number">2</div>
-              <h3>Get Smart Alerts</h3>
-              <p>Our AI learns your patterns and alerts you before issues arise</p>
+              <h3>{t('landing.howItWorks.step2.title')}</h3>
+              <p>{t('landing.howItWorks.step2.description')}</p>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="step"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -217,8 +219,8 @@ const Landing: React.FC = () => {
               transition={{ delay: 0.2 }}
             >
               <div className="step-number">3</div>
-              <h3>Save Your Devices</h3>
-              <p>Never lose expensive equipment to preventable battery failures</p>
+              <h3>{t('landing.howItWorks.step3.title')}</h3>
+              <p>{t('landing.howItWorks.step3.description')}</p>
             </motion.div>
           </div>
         </div>
@@ -233,7 +235,7 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="section-title">Loved by Users Worldwide</h2>
+            <h2 className="section-title">{t('landing.testimonials.title')}</h2>
           </motion.div>
           
           <div className="testimonials-grid">
@@ -271,8 +273,8 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="section-title">Simple, Transparent Pricing</h2>
-            <p className="section-subtitle">Start free, upgrade when you need more</p>
+            <h2 className="section-title">{t('landing.pricing.title')}</h2>
+            <p className="section-subtitle">{t('landing.pricing.subtitle')}</p>
           </motion.div>
           
           <div className="pricing-grid">
@@ -282,20 +284,20 @@ const Landing: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h3 className="pricing-title">Free</h3>
+              <h3 className="pricing-title">{t('landing.pricing.free.title')}</h3>
               <div className="pricing-price">
                 <span className="currency">CHF</span>
-                <span className="amount">0</span>
-                <span className="period">/month</span>
+                <span className="amount">{t('landing.pricing.free.price')}</span>
+                <span className="period">{t('landing.pricing.free.period')}</span>
               </div>
               <ul className="pricing-features">
-                <li><Check className="w-4 h-4" /> Up to 5 devices</li>
-                <li><Check className="w-4 h-4" /> Basic monitoring</li>
-                <li><Check className="w-4 h-4" /> Email alerts</li>
-                <li><Check className="w-4 h-4" /> 7-day history</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.devices')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.monitoring')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.alerts')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.history')}</li>
               </ul>
               <Link to="/signup" className="btn btn-secondary btn-block">
-                Start Free
+                {t('landing.pricing.free.cta')}
               </Link>
             </motion.div>
             
@@ -306,23 +308,23 @@ const Landing: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <div className="pricing-badge">Most Popular</div>
-              <h3 className="pricing-title">Pro</h3>
+              <div className="pricing-badge">{t('landing.pricing.pro.badge')}</div>
+              <h3 className="pricing-title">{t('landing.pricing.pro.title')}</h3>
               <div className="pricing-price">
                 <span className="currency">CHF</span>
-                <span className="amount">9</span>
-                <span className="period">/month</span>
+                <span className="amount">{t('landing.pricing.pro.price')}</span>
+                <span className="period">{t('landing.pricing.pro.period')}</span>
               </div>
               <ul className="pricing-features">
-                <li><Check className="w-4 h-4" /> Unlimited devices</li>
-                <li><Check className="w-4 h-4" /> AI predictions</li>
-                <li><Check className="w-4 h-4" /> Push notifications</li>
-                <li><Check className="w-4 h-4" /> Full history</li>
-                <li><Check className="w-4 h-4" /> Insurance reports</li>
-                <li><Check className="w-4 h-4" /> Priority support</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.devices')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.ai')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.push')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.history')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.reports')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.pro.features.support')}</li>
               </ul>
               <Link to="/signup" className="btn btn-primary btn-block">
-                Start Pro Trial
+                {t('landing.pricing.pro.cta')}
               </Link>
             </motion.div>
             
@@ -333,22 +335,22 @@ const Landing: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <h3 className="pricing-title">Business</h3>
+              <h3 className="pricing-title">{t('landing.pricing.business.title')}</h3>
               <div className="pricing-price">
                 <span className="currency">CHF</span>
-                <span className="amount">49</span>
-                <span className="period">/month</span>
+                <span className="amount">{t('landing.pricing.business.price')}</span>
+                <span className="period">{t('landing.pricing.business.period')}</span>
               </div>
               <ul className="pricing-features">
-                <li><Check className="w-4 h-4" /> Everything in Pro</li>
-                <li><Check className="w-4 h-4" /> Team management</li>
-                <li><Check className="w-4 h-4" /> API access</li>
-                <li><Check className="w-4 h-4" /> Custom integrations</li>
-                <li><Check className="w-4 h-4" /> SLA guarantee</li>
-                <li><Check className="w-4 h-4" /> Dedicated support</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.everything')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.team')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.api')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.integrations')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.sla')}</li>
+                <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.dedicated')}</li>
               </ul>
               <Link to="/contact" className="btn btn-secondary btn-block">
-                Contact Sales
+                {t('landing.pricing.business.cta')}
               </Link>
             </motion.div>
           </div>
@@ -364,22 +366,22 @@ const Landing: React.FC = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="cta-title">Ready to Stay Foxy?</h2>
+            <h2 className="cta-title">{t('landing.cta.title')}</h2>
             <p className="cta-subtitle">
-              Join thousands who never worry about dead batteries
+              {t('landing.cta.subtitle')}
             </p>
             <Link to="/signup" className="btn btn-white btn-large">
-              Start Free Monitoring
+              {t('landing.cta.button')}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
             <p className="cta-note">
-              No credit card required • 2 minute setup • Cancel anytime
+              {t('landing.cta.note')}
             </p>
-            
+
             {/* Mr. Vision Credit */}
             <div className="creator-credit">
               <p className="credit-text">
-                Crafted with ❤️ and ⚡ by{' '}
+                {t('landing.cta.credit')}{' '}
                 <a
                   href="https://mr-vision.ch"
                   target="_blank"

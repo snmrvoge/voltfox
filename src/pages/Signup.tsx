@@ -1,12 +1,14 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { auth, db, googleProvider } from '../config/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -102,10 +104,10 @@ export default function Signup() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', color: '#2E3A4B' }}>
-            🦊 VoltFox
+            🦊 {t('common.appName')}
           </h1>
           <p style={{ color: '#666', marginTop: '0.5rem' }}>
-            Create your account
+            {t('auth.signup.title')}
           </p>
         </div>
 
@@ -130,7 +132,7 @@ export default function Signup() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Your Name
+              {t('auth.signup.name')}
             </label>
             <input
               type="text"
@@ -145,7 +147,7 @@ export default function Signup() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="Mr. Vision"
+              placeholder={t('auth.signup.namePlaceholder')}
             />
           </div>
 
@@ -156,7 +158,7 @@ export default function Signup() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Email Address
+              {t('auth.signup.email')}
             </label>
             <input
               type="email"
@@ -171,7 +173,7 @@ export default function Signup() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="hello@voltfox.app"
+              placeholder={t('auth.signup.emailPlaceholder')}
             />
           </div>
 
@@ -182,7 +184,7 @@ export default function Signup() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Password
+              {t('auth.signup.password')}
             </label>
             <input
               type="password"
@@ -197,7 +199,7 @@ export default function Signup() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="Min. 6 characters"
+              placeholder={t('auth.signup.passwordPlaceholder')}
             />
           </div>
 
@@ -208,7 +210,7 @@ export default function Signup() {
               color: '#2E3A4B',
               fontWeight: '500'
             }}>
-              Confirm Password
+              {t('auth.signup.confirmPassword')}
             </label>
             <input
               type="password"
@@ -223,7 +225,7 @@ export default function Signup() {
                 fontSize: '1rem',
                 outline: 'none'
               }}
-              placeholder="Repeat password"
+              placeholder={t('auth.signup.confirmPlaceholder')}
             />
           </div>
 
@@ -242,7 +244,7 @@ export default function Signup() {
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {loading ? 'Creating Account...' : 'Create Account 🚀'}
+            {loading ? t('auth.signup.submitting') : t('auth.signup.submit')}
           </button>
         </form>
 
@@ -251,7 +253,7 @@ export default function Signup() {
           textAlign: 'center',
           color: '#9CA3AF'
         }}>
-          or
+          {t('auth.signup.or')}
         </div>
 
         <button
@@ -274,7 +276,7 @@ export default function Signup() {
           }}
         >
           <span style={{ fontSize: '1.2rem' }}>🌐</span>
-          Continue with Google
+          {t('auth.signup.google')}
         </button>
 
         <p style={{
@@ -282,13 +284,13 @@ export default function Signup() {
           marginTop: '2rem',
           color: '#666'
         }}>
-          Already have an account?{' '}
+          {t('auth.signup.hasAccount')}{' '}
           <Link to="/login" style={{
             color: '#FF6B35',
             fontWeight: 'bold',
             textDecoration: 'none'
           }}>
-            Sign In
+            {t('auth.signup.signIn')}
           </Link>
         </p>
 
@@ -310,7 +312,7 @@ export default function Signup() {
             onMouseOver={(e) => (e.currentTarget.style.color = '#FF6B35')}
             onMouseOut={(e) => (e.currentTarget.style.color = '#9CA3AF')}
           >
-            Created by Mr. Vision ✨
+            {t('common.createdBy')} ✨
           </a>
         </p>
       </div>

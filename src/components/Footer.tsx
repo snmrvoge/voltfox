@@ -1,1 +1,1 @@
-import React from 'react'; export default function Footer() { return null; }
+export default function Footer() { return null; }

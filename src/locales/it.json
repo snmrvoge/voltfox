@@ -1,0 +1,229 @@
+{
+  "common": {
+    "appName": "VoltFox",
+    "tagline": "Resta furbo, resta carico",
+    "createdBy": "Creato da Mr. Vision"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "devices": "Dispositivi",
+    "settings": "Impostazioni",
+    "admin": "Admin",
+    "signOut": "Disconnetti"
+  },
+  "landing": {
+    "hero": {
+      "title": "Non perdere mai più un dispositivo per batterie scariche",
+      "description": "La volpe intelligente sorveglia le tue batterie 24/7 con previsioni basate sull'IA e avvisi istantanei. Unisciti a 50.000+ utenti che non si preoccupano più delle batterie scariche.",
+      "startMonitoring": "Inizia gratis",
+      "watchDemo": "Guarda la demo"
+    },
+    "stats": {
+      "monitored": "Batterie monitorate",
+      "saved": "Dispositivi salvati",
+      "rating": "Valutazione app",
+      "monitoring": "Monitoraggio"
+    },
+    "features": {
+      "title": "Perché VoltFox?",
+      "subtitle": "Tutto ciò di cui hai bisogno per mantenere le tue batterie sane e i dispositivi funzionanti",
+      "smartMonitoring": {
+        "title": "Monitoraggio intelligente",
+        "description": "Le previsioni basate sull'IA mantengono le tue batterie sane"
+      },
+      "deviceProtection": {
+        "title": "Protezione dei dispositivi",
+        "description": "Non perdere mai più un dispositivo per batterie scariche"
+      },
+      "instantAlerts": {
+        "title": "Avvisi istantanei",
+        "description": "Ricevi notifiche prima che sorgano problemi"
+      },
+      "healthAnalytics": {
+        "title": "Analisi della salute",
+        "description": "Monitora le prestazioni della batteria nel tempo"
+      },
+      "communityInsights": {
+        "title": "Approfondimenti della community",
+        "description": "Impara da milioni di dati sulle batterie"
+      },
+      "insuranceReady": {
+        "title": "Pronto per l'assicurazione",
+        "description": "Documenta i valori dei tuoi dispositivi per la copertura"
+      }
+    },
+    "howItWorks": {
+      "title": "Semplice come 1-2-3",
+      "subtitle": "Inizia in pochi minuti",
+      "step1": {
+        "title": "Aggiungi i tuoi dispositivi",
+        "description": "Parla a VoltFox delle tue batterie - telefoni, droni, strumenti, qualsiasi cosa!"
+      },
+      "step2": {
+        "title": "Ricevi avvisi intelligenti",
+        "description": "La nostra IA impara le tue abitudini e ti avvisa prima che sorgano problemi"
+      },
+      "step3": {
+        "title": "Salva i tuoi dispositivi",
+        "description": "Non perdere mai più attrezzature costose per guasti evitabili delle batterie"
+      }
+    },
+    "testimonials": {
+      "title": "Amato dagli utenti di tutto il mondo"
+    },
+    "pricing": {
+      "title": "Prezzi semplici e trasparenti",
+      "subtitle": "Inizia gratis, passa al livello superiore quando ne hai bisogno",
+      "free": {
+        "title": "Gratuito",
+        "price": "0",
+        "period": "/mese",
+        "features": {
+          "devices": "Fino a 5 dispositivi",
+          "monitoring": "Monitoraggio base",
+          "alerts": "Avvisi via email",
+          "history": "Cronologia di 7 giorni"
+        },
+        "cta": "Inizia gratis"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Più popolare",
+        "price": "9",
+        "period": "/mese",
+        "features": {
+          "devices": "Dispositivi illimitati",
+          "ai": "Previsioni IA",
+          "push": "Notifiche push",
+          "history": "Cronologia completa",
+          "reports": "Report assicurativi",
+          "support": "Supporto prioritario"
+        },
+        "cta": "Prova Pro gratuita"
+      },
+      "business": {
+        "title": "Business",
+        "price": "49",
+        "period": "/mese",
+        "features": {
+          "everything": "Tutto in Pro",
+          "team": "Gestione del team",
+          "api": "Accesso API",
+          "integrations": "Integrazioni personalizzate",
+          "sla": "Garanzia SLA",
+          "dedicated": "Supporto dedicato"
+        },
+        "cta": "Contatta le vendite"
+      }
+    },
+    "cta": {
+      "title": "Pronto a restare furbo?",
+      "subtitle": "Unisciti a migliaia di persone che non si preoccupano più delle batterie scariche",
+      "button": "Inizia il monitoraggio gratuito",
+      "note": "Nessuna carta di credito richiesta • Configurazione in 2 minuti • Cancella quando vuoi",
+      "credit": "Realizzato con ❤️ e ⚡ da"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bentornato!",
+      "email": "E-mail",
+      "emailPlaceholder": "ciao@voltfox.app",
+      "password": "Password",
+      "passwordPlaceholder": "Inserisci la tua password",
+      "submit": "Accedi",
+      "submitting": "Accesso in corso...",
+      "or": "oppure",
+      "google": "Continua con Google",
+      "noAccount": "Non hai un account?",
+      "signUp": "Registrati"
+    },
+    "signup": {
+      "title": "Crea il tuo account",
+      "name": "Il tuo nome",
+      "namePlaceholder": "Mr. Vision",
+      "email": "Indirizzo e-mail",
+      "emailPlaceholder": "ciao@voltfox.app",
+      "password": "Password",
+      "passwordPlaceholder": "Min. 6 caratteri",
+      "confirmPassword": "Conferma password",
+      "confirmPlaceholder": "Ripeti la password",
+      "submit": "Crea account 🚀",
+      "submitting": "Creazione account...",
+      "or": "oppure",
+      "google": "Continua con Google",
+      "hasAccount": "Hai già un account?",
+      "signIn": "Accedi"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard VoltFox",
+    "welcome": "Benvenuto su VoltFox!",
+    "loggedInAs": "Connesso come:",
+    "addFirstDevice": "Aggiungi il tuo primo dispositivo",
+    "addDevice": "Aggiungi dispositivo",
+    "stats": {
+      "devices": "Dispositivi",
+      "healthy": "sani",
+      "warnings": "Avvisi",
+      "critical": "critici",
+      "batteryHealth": "Salute della batteria",
+      "average": "Media"
+    },
+    "yourDevices": "I tuoi dispositivi",
+    "viewAll": "Vedi tutti",
+    "health": "Salute:",
+    "lowBattery": "Batteria scarica!"
+  },
+  "devices": {
+    "title": "I tuoi dispositivi",
+    "noDevices": "Nessun dispositivo ancora",
+    "addFirstDevice": "Aggiungi il tuo primo dispositivo per iniziare il monitoraggio",
+    "health": "Salute:",
+    "voltage": "Tensione:",
+    "capacity": "Capacità:",
+    "charge": "Carica:",
+    "lastCharged": "Ultima carica:",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "confirmDelete": "Sei sicuro di voler eliminare questo dispositivo?",
+    "lowBattery": "Batteria scarica!"
+  },
+  "admin": {
+    "title": "Dashboard Admin",
+    "subtitle": "Panoramica di tutti gli utenti e dispositivi VoltFox",
+    "backToDashboard": "Torna alla Dashboard",
+    "stats": {
+      "users": "Utenti",
+      "registeredAccounts": "Account registrati",
+      "devices": "Dispositivi",
+      "totalRegistered": "Totale registrato",
+      "average": "Media",
+      "devicesPerUser": "Dispositivi per utente"
+    },
+    "userOverview": "Panoramica utenti",
+    "noUsers": "Nessun utente registrato ancora.",
+    "table": {
+      "email": "E-mail",
+      "status": "Stato",
+      "devices": "Dispositivi",
+      "deviceList": "Lista dispositivi",
+      "actions": "Azioni",
+      "active": "Attivo",
+      "blocked": "Bloccato",
+      "noDevices": "Nessun dispositivo",
+      "block": "Blocca",
+      "unblock": "Sblocca"
+    },
+    "blockUser": {
+      "cannotBlockSelf": "⚠️ Non puoi bloccare te stesso!",
+      "confirmBlock": "Vuoi davvero bloccare questo utente?\n\nL'utente verrà bloccato e non potrà più accedere.",
+      "confirmUnblock": "Vuoi davvero sbloccare questo utente?\n\nL'utente potrà accedere di nuovo.",
+      "successBlock": "✅ Utente bloccato con successo!",
+      "successUnblock": "✅ Utente sbloccato con successo!",
+      "error": "❌ Errore nel blocco/sblocco dell'utente.",
+      "userNotFound": "Utente non trovato!"
+    },
+    "footer": "Solo accesso amministratore"
+  }
+}

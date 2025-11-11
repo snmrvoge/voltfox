@@ -1,0 +1,229 @@
+{
+  "common": {
+    "appName": "VoltFox",
+    "tagline": "Stay Foxy, Stay Charged",
+    "createdBy": "Created by Mr. Vision"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "devices": "Devices",
+    "settings": "Settings",
+    "admin": "Admin",
+    "signOut": "Sign Out"
+  },
+  "landing": {
+    "hero": {
+      "title": "Never Lose a Device to Dead Batteries",
+      "description": "The smart fox watches over your batteries 24/7 with AI-powered predictions and instant alerts. Join 50,000+ users who never worry about dead batteries.",
+      "startMonitoring": "Start Free Monitoring",
+      "watchDemo": "Watch Demo"
+    },
+    "stats": {
+      "monitored": "Batteries Monitored",
+      "saved": "Devices Saved",
+      "rating": "App Rating",
+      "monitoring": "Monitoring"
+    },
+    "features": {
+      "title": "Why VoltFox?",
+      "subtitle": "Everything you need to keep your batteries healthy and devices running",
+      "smartMonitoring": {
+        "title": "Smart Monitoring",
+        "description": "AI-powered predictions keep your batteries healthy"
+      },
+      "deviceProtection": {
+        "title": "Device Protection",
+        "description": "Never lose a device to dead batteries again"
+      },
+      "instantAlerts": {
+        "title": "Instant Alerts",
+        "description": "Get notified before problems arise"
+      },
+      "healthAnalytics": {
+        "title": "Health Analytics",
+        "description": "Track battery performance over time"
+      },
+      "communityInsights": {
+        "title": "Community Insights",
+        "description": "Learn from millions of battery data points"
+      },
+      "insuranceReady": {
+        "title": "Insurance Ready",
+        "description": "Document your device values for coverage"
+      }
+    },
+    "howItWorks": {
+      "title": "Simple as 1-2-3",
+      "subtitle": "Get started in minutes",
+      "step1": {
+        "title": "Add Your Devices",
+        "description": "Tell VoltFox about your batteries - phones, drones, tools, anything!"
+      },
+      "step2": {
+        "title": "Get Smart Alerts",
+        "description": "Our AI learns your patterns and alerts you before issues arise"
+      },
+      "step3": {
+        "title": "Save Your Devices",
+        "description": "Never lose expensive equipment to preventable battery failures"
+      }
+    },
+    "testimonials": {
+      "title": "Loved by Users Worldwide"
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Start free, upgrade when you need more",
+      "free": {
+        "title": "Free",
+        "price": "0",
+        "period": "/month",
+        "features": {
+          "devices": "Up to 5 devices",
+          "monitoring": "Basic monitoring",
+          "alerts": "Email alerts",
+          "history": "7-day history"
+        },
+        "cta": "Start Free"
+      },
+      "pro": {
+        "title": "Pro",
+        "badge": "Most Popular",
+        "price": "9",
+        "period": "/month",
+        "features": {
+          "devices": "Unlimited devices",
+          "ai": "AI predictions",
+          "push": "Push notifications",
+          "history": "Full history",
+          "reports": "Insurance reports",
+          "support": "Priority support"
+        },
+        "cta": "Start Pro Trial"
+      },
+      "business": {
+        "title": "Business",
+        "price": "49",
+        "period": "/month",
+        "features": {
+          "everything": "Everything in Pro",
+          "team": "Team management",
+          "api": "API access",
+          "integrations": "Custom integrations",
+          "sla": "SLA guarantee",
+          "dedicated": "Dedicated support"
+        },
+        "cta": "Contact Sales"
+      }
+    },
+    "cta": {
+      "title": "Ready to Stay Foxy?",
+      "subtitle": "Join thousands who never worry about dead batteries",
+      "button": "Start Free Monitoring",
+      "note": "No credit card required • 2 minute setup • Cancel anytime",
+      "credit": "Crafted with ❤️ and ⚡ by"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back!",
+      "email": "Email",
+      "emailPlaceholder": "hello@voltfox.app",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "or": "or",
+      "google": "Continue with Google",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up"
+    },
+    "signup": {
+      "title": "Create your account",
+      "name": "Your Name",
+      "namePlaceholder": "Mr. Vision",
+      "email": "Email Address",
+      "emailPlaceholder": "hello@voltfox.app",
+      "password": "Password",
+      "passwordPlaceholder": "Min. 6 characters",
+      "confirmPassword": "Confirm Password",
+      "confirmPlaceholder": "Repeat password",
+      "submit": "Create Account 🚀",
+      "submitting": "Creating Account...",
+      "or": "or",
+      "google": "Continue with Google",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign In"
+    }
+  },
+  "dashboard": {
+    "title": "VoltFox Dashboard",
+    "welcome": "Welcome to VoltFox!",
+    "loggedInAs": "Logged in as:",
+    "addFirstDevice": "Add your first device",
+    "addDevice": "Add Device",
+    "stats": {
+      "devices": "Devices",
+      "healthy": "healthy",
+      "warnings": "Warnings",
+      "critical": "critical",
+      "batteryHealth": "Battery Health",
+      "average": "Average"
+    },
+    "yourDevices": "Your Devices",
+    "viewAll": "View All",
+    "health": "Health:",
+    "lowBattery": "Low battery!"
+  },
+  "devices": {
+    "title": "Your Devices",
+    "noDevices": "No devices yet",
+    "addFirstDevice": "Add your first device to start monitoring",
+    "health": "Health:",
+    "voltage": "Voltage:",
+    "capacity": "Capacity:",
+    "charge": "Charge:",
+    "lastCharged": "Last charged:",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this device?",
+    "lowBattery": "Low battery!"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Overview of all VoltFox users and devices",
+    "backToDashboard": "Back to Dashboard",
+    "stats": {
+      "users": "Users",
+      "registeredAccounts": "Registered Accounts",
+      "devices": "Devices",
+      "totalRegistered": "Total registered",
+      "average": "Average",
+      "devicesPerUser": "Devices per user"
+    },
+    "userOverview": "User Overview",
+    "noUsers": "No users registered yet.",
+    "table": {
+      "email": "Email",
+      "status": "Status",
+      "devices": "Devices",
+      "deviceList": "Device List",
+      "actions": "Actions",
+      "active": "Active",
+      "blocked": "Blocked",
+      "noDevices": "No devices",
+      "block": "Block",
+      "unblock": "Unblock"
+    },
+    "blockUser": {
+      "cannotBlockSelf": "⚠️ You cannot block yourself!",
+      "confirmBlock": "Do you really want to block this user?\n\nThe user will be blocked and cannot log in anymore.",
+      "confirmUnblock": "Do you really want to unblock this user?\n\nThe user will be able to log in again.",
+      "successBlock": "✅ User successfully blocked!",
+      "successUnblock": "✅ User successfully unblocked!",
+      "error": "❌ Error blocking/unblocking user.",
+      "userNotFound": "User not found!"
+    },
+    "footer": "Admin Access Only"
+  }
+}

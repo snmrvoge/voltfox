@@ -1,6 +1,7 @@
 // src/pages/AdminDashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -17,6 +18,7 @@ interface UserStats {
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
@@ -144,14 +146,12 @@ const AdminDashboard: React.FC = () => {
 
     // Prevent blocking yourself
     if (userId === currentUser.uid) {
-      alert('⚠️ Du kannst dich nicht selbst sperren!');
+      alert(t('admin.blockUser.cannotBlockSelf'));
       return;
     }
 
-    const action = currentlyBlocked ? 'entsperren' : 'sperren';
     const confirmed = window.confirm(
-      `Möchtest du diesen User wirklich ${action}?\n\n` +
-      `${currentlyBlocked ? 'Der User kann sich danach wieder anmelden.' : 'Der User wird gesperrt und kann sich nicht mehr anmelden.'}`
+      currentlyBlocked ? t('admin.blockUser.confirmUnblock') : t('admin.blockUser.confirmBlock')
     );
 
     if (!confirmed) return;
@@ -161,7 +161,7 @@ const AdminDashboard: React.FC = () => {
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        alert('User nicht gefunden!');
+        alert(t('admin.blockUser.userNotFound'));
         return;
       }
 
@@ -177,10 +177,10 @@ const AdminDashboard: React.FC = () => {
       // Reload data to reflect changes
       loadAdminData();
 
-      alert(`✅ User erfolgreich ${currentlyBlocked ? 'entsperrt' : 'gesperrt'}!`);
+      alert(currentlyBlocked ? t('admin.blockUser.successUnblock') : t('admin.blockUser.successBlock'));
     } catch (error) {
       console.error('Error toggling user block:', error);
-      alert('❌ Fehler beim Sperren/Entsperren des Users.');
+      alert(t('admin.blockUser.error'));
     }
   };
 
@@ -239,7 +239,7 @@ const AdminDashboard: React.FC = () => {
           }}
         >
           <ArrowLeft size={20} />
-          Zurück zum Dashboard
+          {t('admin.backToDashboard')}
         </button>
 
         {/* Header */}
@@ -251,9 +251,9 @@ const AdminDashboard: React.FC = () => {
           boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
         }}>
           <h1 style={{ color: '#2E3A4B', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            🛡️ Admin Dashboard
+            🛡️ {t('admin.title')}
           </h1>
-          <p style={{ color: '#666' }}>Übersicht über alle VoltFox Nutzer und Geräte</p>
+          <p style={{ color: '#666' }}>{t('admin.subtitle')}</p>
         </div>
 
         {/* Stats Grid */}
@@ -273,12 +273,12 @@ const AdminDashboard: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
               <Users size={24} color="#667eea" />
-              <h3 style={{ color: '#2E3A4B', margin: 0 }}>Nutzer</h3>
+              <h3 style={{ color: '#2E3A4B', margin: 0 }}>{t('admin.stats.users')}</h3>
             </div>
             <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#667eea', margin: '0.5rem 0' }}>
               {userStats.length}
             </p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Registrierte Accounts</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('admin.stats.registeredAccounts')}</p>
           </div>
 
           {/* Total Devices */}
@@ -291,12 +291,12 @@ const AdminDashboard: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
               <Battery size={24} color="#10B981" />
-              <h3 style={{ color: '#2E3A4B', margin: 0 }}>Geräte</h3>
+              <h3 style={{ color: '#2E3A4B', margin: 0 }}>{t('admin.stats.devices')}</h3>
             </div>
             <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#10B981', margin: '0.5rem 0' }}>
               {totalDevices}
             </p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Gesamt registriert</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('admin.stats.totalRegistered')}</p>
           </div>
 
           {/* Avg Devices per User */}
@@ -309,12 +309,12 @@ const AdminDashboard: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
               <TrendingUp size={24} color="#F59E0B" />
-              <h3 style={{ color: '#2E3A4B', margin: 0 }}>Durchschnitt</h3>
+              <h3 style={{ color: '#2E3A4B', margin: 0 }}>{t('admin.stats.average')}</h3>
             </div>
             <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#F59E0B', margin: '0.5rem 0' }}>
               {avgDevicesPerUser}
             </p>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Geräte pro Nutzer</p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('admin.stats.devicesPerUser')}</p>
           </div>
         </div>
 
@@ -325,11 +325,11 @@ const AdminDashboard: React.FC = () => {
           borderRadius: '15px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
         }}>
-          <h2 style={{ color: '#2E3A4B', marginBottom: '1.5rem' }}>Nutzer-Übersicht</h2>
+          <h2 style={{ color: '#2E3A4B', marginBottom: '1.5rem' }}>{t('admin.userOverview')}</h2>
 
           {userStats.length === 0 ? (
             <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
-              Noch keine Nutzer registriert.
+              {t('admin.noUsers')}
             </p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -342,11 +342,11 @@ const AdminDashboard: React.FC = () => {
                     borderBottom: '2px solid #E5E7EB',
                     textAlign: 'left'
                   }}>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Email</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Status</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Geräte</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Geräte-Liste</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Aktionen</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.email')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.status')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.devices')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.deviceList')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -382,7 +382,7 @@ const AdminDashboard: React.FC = () => {
                           fontWeight: 600,
                           fontSize: '0.9rem'
                         }}>
-                          {user.isBlocked ? '🚫 Gesperrt' : '✅ Aktiv'}
+                          {user.isBlocked ? `🚫 ${t('admin.table.blocked')}` : `✅ ${t('admin.table.active')}`}
                         </span>
                       </td>
                       <td style={{ padding: '1rem' }}>
@@ -405,7 +405,7 @@ const AdminDashboard: React.FC = () => {
                             {user.devices.length > 3 && ` (+${user.devices.length - 3} mehr)`}
                           </div>
                         ) : (
-                          <span style={{ color: '#999', fontSize: '0.9rem' }}>Keine Geräte</span>
+                          <span style={{ color: '#999', fontSize: '0.9rem' }}>{t('admin.table.noDevices')}</span>
                         )}
                       </td>
                       <td style={{ padding: '1rem' }}>
@@ -433,7 +433,7 @@ const AdminDashboard: React.FC = () => {
                             e.currentTarget.style.transform = 'scale(1)';
                           }}
                         >
-                          {user.isBlocked ? '✓ Entsperren' : '✕ Sperren'}
+                          {user.isBlocked ? `✓ ${t('admin.table.unblock')}` : `✕ ${t('admin.table.block')}`}
                         </button>
                       </td>
                     </tr>
@@ -451,7 +451,7 @@ const AdminDashboard: React.FC = () => {
           color: '#9CA3AF',
           textAlign: 'center'
         }}>
-          🛡️ Admin Access Only
+          🛡️ {t('admin.footer')}
         </p>
       </div>
     </div>
