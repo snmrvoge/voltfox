@@ -1,1 +1,1 @@
-import React from 'react'; import { Navigate } from 'react-router-dom'; export default function ProtectedRoute({ children }: any) { return children; }
+export default function ProtectedRoute({ children }: any) { return children; }

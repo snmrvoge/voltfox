@@ -1,5 +1,6 @@
-// src/config/firebase.ts
-import { initializeApp, type FirebaseApp } from 'firebase/app';
+// KOPIERE DIESE DATEI NACH: src/config/firebase.ts
+
+import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -43,7 +44,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Initialize Firebase
-let app: FirebaseApp;
+let app;
 try {
   app = initializeApp(firebaseConfig);
   console.log('Firebase initialized successfully with project:', firebaseConfig.projectId);
@@ -56,28 +57,6 @@ try {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-
-// Test Firestore connectivity
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  import('firebase/firestore').then(({ collection, getDocs }) => {
-    console.log('Testing Firestore connectivity...');
-    // This will help diagnose if Firestore is actually reachable
-  }).catch(err => {
-    console.error('Firestore import error:', err);
-  });
-}
-
-// Note: Persistence is optional and can cause issues
-// Commenting out for now to avoid offline errors
-// if (typeof window !== 'undefined') {
-//   enableIndexedDbPersistence(db).catch((err) => {
-//     if (err.code === 'failed-precondition') {
-//       console.warn('Firestore persistence failed: Multiple tabs open');
-//     } else if (err.code === 'unimplemented') {
-//       console.warn('Firestore persistence not available in this browser');
-//     }
-//   });
-// }
 
 // Initialize Analytics conditionally
 let analytics = null;

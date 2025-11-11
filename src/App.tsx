@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Devices from './pages/Devices';
 import AddDevice from './pages/AddDevice';
+import EditDevice from './pages/EditDevice';
 import Settings from './pages/Settings';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -19,6 +20,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
+import { FirebaseStatus } from './components/FirebaseStatus';
 
 // Styles
 import './styles/App.css';
@@ -65,46 +67,54 @@ function App() {
             />
             
             <Navigation />
-            
-            <main className="voltfox-content">
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/devices" element={
-                  <ProtectedRoute>
-                    <Devices />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/add-device" element={
-                  <ProtectedRoute>
-                    <AddDevice />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/admin" element={
-                  <ProtectedRoute adminOnly>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </main>
+
+            <FirebaseStatus>
+              <main className="voltfox-content">
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/devices" element={
+                    <ProtectedRoute>
+                      <Devices />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/add-device" element={
+                    <ProtectedRoute>
+                      <AddDevice />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/edit-device/:id" element={
+                    <ProtectedRoute>
+                      <EditDevice />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/admin" element={
+                    <ProtectedRoute adminOnly>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </main>
+            </FirebaseStatus>
             
             <Footer />
             

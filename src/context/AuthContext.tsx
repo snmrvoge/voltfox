@@ -267,19 +267,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const profile = userDoc.data() as UserProfile;
-          setUserProfile(profile);
-          setIsAdmin(profile.role === 'admin');
+
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const profile = userDoc.data() as UserProfile;
+            setUserProfile(profile);
+            setIsAdmin(profile.role === 'admin');
+          }
+        } catch (error) {
+          console.error('Failed to load user profile:', error);
+          // Continue without profile data
+          setUserProfile(null);
+          setIsAdmin(false);
         }
       } else {
         setCurrentUser(null);
         setUserProfile(null);
         setIsAdmin(false);
       }
-      
+
       setLoading(false);
     });
 

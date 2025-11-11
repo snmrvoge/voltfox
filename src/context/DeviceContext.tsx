@@ -9,7 +9,6 @@ import {
   deleteDoc,
   onSnapshot,
   query,
-  where,
   serverTimestamp,
   orderBy
 } from 'firebase/firestore';
@@ -77,21 +76,36 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
       return;
     }
 
-    const devicesQuery = query(
-      collection(db, 'users', currentUser.uid, 'devices'),
-      orderBy('createdAt', 'desc')
-    );
+    try {
+      const devicesQuery = query(
+        collection(db, 'users', currentUser.uid, 'devices'),
+        orderBy('createdAt', 'desc')
+      );
 
-    const unsubscribe = onSnapshot(devicesQuery, (snapshot) => {
-      const devicesList: Device[] = [];
-      snapshot.forEach((doc) => {
-        devicesList.push({ id: doc.id, ...doc.data() } as Device);
-      });
-      setDevices(devicesList);
+      const unsubscribe = onSnapshot(
+        devicesQuery,
+        (snapshot) => {
+          const devicesList: Device[] = [];
+          snapshot.forEach((doc) => {
+            devicesList.push({ id: doc.id, ...doc.data() } as Device);
+          });
+          setDevices(devicesList);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Firestore error:', error);
+          // Set loading to false and use empty devices array
+          setDevices([]);
+          setLoading(false);
+        }
+      );
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Failed to setup Firestore listener:', error);
+      setDevices([]);
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
   }, [currentUser]);
 
   // Add device
