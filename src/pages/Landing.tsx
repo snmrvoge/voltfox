@@ -349,7 +349,7 @@ const Landing: React.FC = () => {
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.sla')}</li>
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.dedicated')}</li>
               </ul>
-              <Link to="/contact" className="btn btn-secondary btn-block">
+              <Link to="/signup" className="btn btn-secondary btn-block">
                 {t('landing.pricing.business.cta')}
               </Link>
             </motion.div>
