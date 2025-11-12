@@ -305,6 +305,131 @@ const EditDevice: React.FC = () => {
         <p>Aktualisiere die Details deines Geräts</p>
       </div>
 
+      {/* Usage Information Display */}
+      {(device.lastUsed || device.lastCharged || device.isDefective) && (
+        <div style={{
+          background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+          padding: '1.5rem',
+          borderRadius: '15px',
+          marginBottom: '1.5rem',
+          border: '2px solid #3B82F6',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+        }}>
+          <h3 style={{
+            color: '#1E40AF',
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            📊 Nutzungsinformationen
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {device.lastUsed && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#1E40AF',
+                fontSize: '0.95rem'
+              }}>
+                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>✅ Letzte Benutzung:</span>
+                <span>
+                  {(() => {
+                    const lastUsedDate = new Date(device.lastUsed);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - lastUsedDate.getTime());
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 0) return 'Heute';
+                    if (diffDays === 1) return 'Gestern';
+                    if (diffDays < 7) return `vor ${diffDays} Tagen`;
+                    if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)} Wochen`;
+                    return `vor ${Math.floor(diffDays / 30)} Monaten`;
+                  })()}
+                  {' '}
+                  ({new Date(device.lastUsed).toLocaleDateString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })})
+                </span>
+              </div>
+            )}
+
+            {device.lastCharged && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#1E40AF',
+                fontSize: '0.95rem'
+              }}>
+                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>🔋 Letzte Ladung:</span>
+                <span>
+                  {(() => {
+                    const lastChargedDate = new Date(device.lastCharged);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - lastChargedDate.getTime());
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 0) return 'Heute';
+                    if (diffDays === 1) return 'Gestern';
+                    if (diffDays < 7) return `vor ${diffDays} Tagen`;
+                    if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)} Wochen`;
+                    return `vor ${Math.floor(diffDays / 30)} Monaten`;
+                  })()}
+                  {' '}
+                  ({new Date(device.lastCharged).toLocaleDateString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })})
+                </span>
+              </div>
+            )}
+
+            {device.isDefective && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#DC2626',
+                fontSize: '0.95rem',
+                fontWeight: 'bold',
+                padding: '0.5rem',
+                background: '#FEE2E2',
+                borderRadius: '8px',
+                border: '1px solid #DC2626'
+              }}>
+                <span>⚠️ Als defekt markiert</span>
+              </div>
+            )}
+
+            {!device.lastUsed && device.lastCharged && !device.isDefective && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#D97706',
+                fontSize: '0.9rem',
+                fontStyle: 'italic',
+                marginTop: '0.5rem',
+                padding: '0.75rem',
+                background: '#FEF3C7',
+                borderRadius: '8px',
+                border: '1px solid #D97706'
+              }}>
+                <span>💡 Hinweis: Gerät wurde seit der letzten Ladung noch nicht benutzt</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="device-form">
         <div className="form-group">
           <label>

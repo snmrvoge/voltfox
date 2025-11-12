@@ -194,10 +194,13 @@
     "delete": "Supprimer",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet appareil?",
     "lowBattery": "Batterie faible!",
+    "usedAndCharged": "Utilisé & Chargé",
     "chargedWithoutUse": "Chargé sans utilisation",
     "markDefective": "Déchargé profondément / Défectueux",
+    "confirmUsedAndCharged": "L'appareil a été utilisé et est maintenant complètement chargé?",
     "confirmChargedWithoutUse": "L'appareil a été chargé mais pas utilisé?",
     "confirmMarkDefective": "Marquer l'appareil comme déchargé profondément ou défectueux?",
+    "markedAsUsedAndCharged": "✅ Marqué comme utilisé et complètement chargé",
     "markedAsChargedWithoutUse": "✅ Marqué comme chargé sans utilisation",
     "markedAsDefective": "⚠️ Marqué comme défectueux",
     "types": {

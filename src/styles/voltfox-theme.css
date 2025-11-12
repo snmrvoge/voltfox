@@ -454,6 +454,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
+  grid-auto-rows: 1fr;
 }
 
 .device-card {
@@ -463,6 +464,9 @@ body {
   box-shadow: var(--vf-shadow-md);
   transition: all 0.3s;
   border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .device-card:hover {
@@ -1083,5 +1087,89 @@ section {
   
   .pricing-featured {
     transform: scale(1);
+  }
+}
+
+/* Insurance Report Page Styling */
+.insurance-report-page {
+  min-height: 100vh;
+  background: var(--vf-light);
+  padding: 2rem;
+}
+
+.insurance-report-page > div:not(.no-print) {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.print-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Print Styles for Insurance Report */
+@media print {
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  body,
+  #root,
+  .insurance-report-page {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .print-content {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 1cm !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Ensure proper page breaks */
+  .device-card {
+    page-break-inside: avoid;
+  }
+
+  /* Set page margins */
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  /* Print in color if possible */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Optimize font sizes for print */
+  body {
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  h1 {
+    font-size: 24pt;
+  }
+
+  h2 {
+    font-size: 18pt;
+  }
+
+  h3 {
+    font-size: 14pt;
+  }
+
+  h4 {
+    font-size: 12pt;
   }
 }

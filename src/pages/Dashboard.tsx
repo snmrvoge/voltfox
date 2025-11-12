@@ -297,6 +297,38 @@ export default function Dashboard() {
                   </div>
                   <p className="device-type">{device.type}</p>
                   <p className="device-health">{t('dashboard.health')} {device.health}%</p>
+
+                  {/* Last Used Information */}
+                  {device.lastUsed && (
+                    <div style={{
+                      fontSize: '0.8rem',
+                      color: '#666',
+                      marginTop: '0.5rem',
+                      padding: '0.5rem',
+                      background: '#F3F4F6',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <span style={{ fontSize: '1rem' }}>🕒</span>
+                      <span>
+                        Zuletzt: {(() => {
+                          const lastUsedDate = new Date(device.lastUsed);
+                          const now = new Date();
+                          const diffTime = Math.abs(now.getTime() - lastUsedDate.getTime());
+                          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                          if (diffDays === 0) return 'Heute';
+                          if (diffDays === 1) return 'Gestern';
+                          if (diffDays < 7) return `vor ${diffDays}T`;
+                          if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)}W`;
+                          return `vor ${Math.floor(diffDays / 30)}M`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
+
                   {device.currentCharge < 20 && (
                     <div className="device-warning">
                       <AlertCircle size={16} />

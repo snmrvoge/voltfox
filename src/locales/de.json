@@ -194,10 +194,13 @@
     "delete": "Löschen",
     "confirmDelete": "Bist du sicher, dass du dieses Gerät löschen möchtest?",
     "lowBattery": "Niedriger Ladestand!",
+    "usedAndCharged": "Benutzt & Voll",
     "chargedWithoutUse": "Aufgeladen ohne Benutzung",
     "markDefective": "Tiefentladen / Defekt",
+    "confirmUsedAndCharged": "Gerät wurde benutzt und ist jetzt voll aufgeladen?",
     "confirmChargedWithoutUse": "Gerät wurde aufgeladen aber nicht benutzt?",
     "confirmMarkDefective": "Gerät als tiefentladen oder defekt markieren?",
+    "markedAsUsedAndCharged": "✅ Als benutzt und voll aufgeladen markiert",
     "markedAsChargedWithoutUse": "✅ Als aufgeladen ohne Benutzung markiert",
     "markedAsDefective": "⚠️ Als defekt markiert",
     "types": {

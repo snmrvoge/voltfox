@@ -70,9 +70,8 @@ function App() {
             
             <Navigation />
 
-            <FirebaseStatus>
-              <main className="voltfox-content">
-                <Routes>
+            <main className="voltfox-content">
+              <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
@@ -127,9 +126,8 @@ function App() {
 
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
-              </main>
-            </FirebaseStatus>
-            
+            </main>
+
             <Footer />
             
             {/* Mr. Vision Credit Badge */}

@@ -238,6 +238,85 @@ export default function NotificationSettings() {
           </div>
         </div>
 
+        {/* Test Notification Button */}
+        <div style={{
+          background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+          padding: '1.5rem',
+          borderRadius: '15px',
+          marginBottom: '1.5rem',
+          border: '2px solid #3B82F6',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '0.5rem'
+          }}>
+            <h3 style={{
+              color: '#1E40AF',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              🧪 Test-Benachrichtigung
+            </h3>
+          </div>
+          <p style={{ color: '#1E40AF', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            Teste, ob Browser-Benachrichtigungen funktionieren
+          </p>
+          <button
+            onClick={() => {
+              if (Notification.permission === 'granted') {
+                NotificationService.send(t('notifications.test.title'), {
+                  body: t('notifications.test.body')
+                });
+                toast.success('🔔 Test-Benachrichtigung gesendet!');
+              } else {
+                toast.error('⚠️ Bitte aktiviere zuerst Browser-Benachrichtigungen!');
+              }
+            }}
+            disabled={browserPermission !== 'granted'}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1.5rem',
+              background: browserPermission === 'granted'
+                ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                : '#D1D5DB',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              cursor: browserPermission === 'granted' ? 'pointer' : 'not-allowed',
+              transition: 'all 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              boxShadow: browserPermission === 'granted' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
+            }}
+            onMouseOver={(e) => {
+              if (browserPermission === 'granted') {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (browserPermission === 'granted') {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+              }
+            }}
+          >
+            <Bell size={20} />
+            Test-Benachrichtigung senden
+          </button>
+        </div>
+
         {/* Email Notifications */}
         <div style={{
           background: 'white',

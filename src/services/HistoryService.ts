@@ -34,7 +34,8 @@ export interface HistoryEntry {
 
 export type DeviceEventType =
   | 'charged_without_use'  // Device was charged but not used
-  | 'marked_defective';    // Device was marked as defective/deep discharged
+  | 'marked_defective'     // Device was marked as defective/deep discharged
+  | 'used_and_charged';    // Device was used and then fully charged
 
 export interface DeviceEvent {
   id?: string;

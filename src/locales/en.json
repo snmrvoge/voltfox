@@ -194,10 +194,13 @@
     "delete": "Delete",
     "confirmDelete": "Are you sure you want to delete this device?",
     "lowBattery": "Low battery!",
+    "usedAndCharged": "Used & Charged",
     "chargedWithoutUse": "Charged Without Use",
     "markDefective": "Deep Discharged / Defective",
+    "confirmUsedAndCharged": "Device was used and is now fully charged?",
     "confirmChargedWithoutUse": "Device was charged but not used?",
     "confirmMarkDefective": "Mark device as deep discharged or defective?",
+    "markedAsUsedAndCharged": "✅ Marked as used and fully charged",
     "markedAsChargedWithoutUse": "✅ Marked as charged without use",
     "markedAsDefective": "⚠️ Marked as defective",
     "types": {
