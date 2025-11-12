@@ -392,37 +392,47 @@ const EditDevice: React.FC = () => {
               </div>
             )}
 
-            {device.createdAt && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: '#1E40AF',
-                fontSize: '0.95rem'
-              }}>
-                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>📅 Gerät hinzugefügt:</span>
-                <span>
-                  {(() => {
-                    const createdDate = new Date(device.createdAt);
-                    const now = new Date();
-                    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            {device.createdAt && (() => {
+              try {
+                // Handle Firestore Timestamp objects
+                const createdAtValue = device.createdAt?.toDate ? device.createdAt.toDate() : new Date(device.createdAt);
+                // Check if date is valid
+                if (isNaN(createdAtValue.getTime())) return null;
 
-                    if (diffDays === 0) return 'Heute';
-                    if (diffDays === 1) return 'Gestern';
-                    if (diffDays < 7) return `vor ${diffDays} Tagen`;
-                    if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)} Wochen`;
-                    return `vor ${Math.floor(diffDays / 30)} Monaten`;
-                  })()}
-                  {' '}
-                  ({new Date(device.createdAt).toLocaleDateString('de-DE', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                  })})
-                </span>
-              </div>
-            )}
+                const now = new Date();
+                const diffTime = Math.abs(now.getTime() - createdAtValue.getTime());
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                let relativeTime = '';
+                if (diffDays === 0) relativeTime = 'Heute';
+                else if (diffDays === 1) relativeTime = 'Gestern';
+                else if (diffDays < 7) relativeTime = `vor ${diffDays} Tagen`;
+                else if (diffDays < 30) relativeTime = `vor ${Math.floor(diffDays / 7)} Wochen`;
+                else relativeTime = `vor ${Math.floor(diffDays / 30)} Monaten`;
+
+                const absoluteDate = createdAtValue.toLocaleDateString('de-DE', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                });
+
+                return (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: '#1E40AF',
+                    fontSize: '0.95rem'
+                  }}>
+                    <span style={{ fontWeight: 'bold', minWidth: '140px' }}>📅 Gerät hinzugefügt:</span>
+                    <span>{relativeTime} ({absoluteDate})</span>
+                  </div>
+                );
+              } catch (e) {
+                // If date parsing fails, don't show anything
+                return null;
+              }
+            })()}
 
             {device.isDefective && (
               <div style={{
