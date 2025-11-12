@@ -903,20 +903,46 @@ const EditDevice: React.FC = () => {
         )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-          <button type="submit" className="btn-primary" style={{ flex: 1 }}>
+          <button
+            type="submit"
+            style={{
+              flex: 1,
+              padding: '1rem',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = '0.9')}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
+          >
             Änderungen speichern
           </button>
           <button
             type="button"
             onClick={handleDelete}
-            className="btn-primary"
             style={{
               flex: 1,
+              padding: '1rem',
+              background: '#EF4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px'
+              gap: '8px',
+              transition: 'background 0.2s'
             }}
+            onMouseOver={(e) => (e.currentTarget.style.background = '#DC2626')}
+            onMouseOut={(e) => (e.currentTarget.style.background = '#EF4444')}
           >
             <Trash2 size={18} />
             Löschen
