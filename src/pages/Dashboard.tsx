@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Battery, AlertCircle, FileText, Settings } from 'lucide-react';
+import { Battery, AlertCircle, FileText, Settings, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
 import { useNavigate } from 'react-router-dom';
@@ -118,6 +118,27 @@ export default function Dashboard() {
               onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
             >
               <FileText size={18} /> Versicherung
+            </button>
+            <button
+              onClick={() => navigate('/community')}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#10B981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                minHeight: '38px'
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = '#059669')}
+              onMouseOut={(e) => (e.currentTarget.style.background = '#10B981')}
+            >
+              <Users size={18} /> Community
             </button>
             {isAdmin && (
               <button

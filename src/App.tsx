@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import NotificationSettings from './pages/NotificationSettings';
 import InsuranceReport from './pages/InsuranceReport';
 import AdminDashboard from './pages/AdminDashboard';
+import Community from './pages/Community';
 
 // Components
 import Navigation from './components/Navigation';
@@ -121,6 +122,12 @@ function App() {
                   <Route path="/admin" element={
                     <ProtectedRoute adminOnly>
                       <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/community" element={
+                    <ProtectedRoute>
+                      <Community />
                     </ProtectedRoute>
                   } />
 
