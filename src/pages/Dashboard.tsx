@@ -95,7 +95,7 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
           <h1 style={{ color: '#2E3A4B' }}>
-            {userName ? `${getTimeBasedGreeting()}, ${userName}! 🦊` : `🦊 ${t('dashboard.title')}`}
+            🦊 {t('dashboard.welcome')}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <button
@@ -216,7 +216,7 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
           <h2 style={{ color: '#2E3A4B', marginBottom: '1rem' }}>
-            {t('dashboard.welcome')}
+            {userName ? `${getTimeBasedGreeting()}, ${userName}!` : t('dashboard.welcome')}
           </h2>
           <p style={{ color: '#666', marginBottom: '2rem' }}>
             {currentUser?.email ? `${t('dashboard.loggedInAs')} ${currentUser.email}` : t('dashboard.addFirstDevice')}

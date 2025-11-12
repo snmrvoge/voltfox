@@ -310,6 +310,8 @@ const AdminDashboard: React.FC = () => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('de-DE', {
       year: 'numeric',
       month: '2-digit',
