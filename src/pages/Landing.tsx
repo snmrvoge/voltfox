@@ -296,12 +296,12 @@ const Landing: React.FC = () => {
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.alerts')}</li>
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.free.features.history')}</li>
               </ul>
-              <Link to="/signup" className="btn btn-secondary btn-block">
+              <Link to="/signup" className="btn btn-primary btn-block">
                 {t('landing.pricing.free.cta')}
               </Link>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="pricing-card pricing-featured"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -327,8 +327,8 @@ const Landing: React.FC = () => {
                 {t('landing.pricing.pro.cta')}
               </Link>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="pricing-card"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -349,9 +349,9 @@ const Landing: React.FC = () => {
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.sla')}</li>
                 <li><Check className="w-4 h-4" /> {t('landing.pricing.business.features.dedicated')}</li>
               </ul>
-              <Link to="/signup" className="btn btn-secondary btn-block">
+              <a href="mailto:info@mr-vision.ch" className="btn btn-primary btn-block">
                 {t('landing.pricing.business.cta')}
-              </Link>
+              </a>
             </motion.div>
           </div>
         </div>

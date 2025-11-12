@@ -930,26 +930,30 @@ section {
   padding: 2rem;
   background: white;
   border-radius: 16px;
-  border: 2px solid #F3F4F6;
+  border: 2px solid #e5e7eb;
   position: relative;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1.0);
+  box-shadow: var(--vf-shadow-sm);
 }
 
 .pricing-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--vf-shadow-xl);
-  border-color: var(--vf-primary);
+  transform: scale(1.03) translateY(-5px);
+  box-shadow: var(--vf-shadow-lg);
+  border-color: #fbbf24;
 }
 
 .pricing-featured {
-  border-color: var(--vf-primary);
-  transform: scale(1.05);
-  box-shadow: var(--vf-shadow-lg);
+  border: 3px solid var(--vf-primary);
+  transform: scale(1.08);
+  box-shadow: 0 20px 40px -12px rgba(255, 107, 53, 0.4);
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.03) 0%, rgba(255, 210, 63, 0.03) 100%);
 }
 
 .pricing-featured:hover {
-  transform: scale(1.08) translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgba(255, 107, 53, 0.3);
+  transform: scale(1.12) translateY(-12px);
+  box-shadow: 0 30px 60px -15px rgba(255, 107, 53, 0.5);
+  border-color: var(--vf-secondary);
 }
 
 .pricing-badge {
