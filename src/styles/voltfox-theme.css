@@ -935,6 +935,8 @@ section {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   transform: scale(1.0);
   box-shadow: var(--vf-shadow-sm);
+  display: flex;
+  flex-direction: column;
 }
 
 .pricing-card:hover {
@@ -1005,6 +1007,7 @@ section {
 .pricing-features {
   list-style: none;
   margin-bottom: 2rem;
+  flex: 1;
 }
 
 .pricing-features li {
