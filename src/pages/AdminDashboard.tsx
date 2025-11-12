@@ -17,6 +17,7 @@ interface UserStats {
   insuranceValue: number;
   currency: string;
   plan: 'free' | 'pro' | 'business';
+  createdAt?: string;
 }
 
 const AdminDashboard: React.FC = () => {
@@ -130,7 +131,8 @@ const AdminDashboard: React.FC = () => {
             blockedAt: userData.blockedAt,
             insuranceValue: userInsuranceValue,
             currency: userCurrency,
-            plan: userData.plan || 'free'
+            plan: userData.plan || 'free',
+            createdAt: userData.createdAt
           });
         } catch (deviceError) {
           console.error(`Error loading devices for user ${userId}:`, deviceError);
@@ -142,7 +144,8 @@ const AdminDashboard: React.FC = () => {
             devices: [],
             insuranceValue: 0,
             currency: userCurrency,
-            plan: userData.plan || 'free'
+            plan: userData.plan || 'free',
+            createdAt: userData.createdAt
           });
         }
       }
@@ -240,6 +243,19 @@ const AdminDashboard: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value);
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -393,6 +409,7 @@ const AdminDashboard: React.FC = () => {
                     textAlign: 'left'
                   }}>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.email')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Registriert</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Plan</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.status')}</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.devices')}</th>
@@ -422,6 +439,11 @@ const AdminDashboard: React.FC = () => {
                           <div style={{ fontSize: '0.85rem', color: '#999' }}>
                             UID: {user.uid.substring(0, 8)}...
                           </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                          {formatDate(user.createdAt)}
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
