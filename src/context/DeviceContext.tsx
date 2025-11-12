@@ -51,6 +51,18 @@ interface Device {
   isDefective?: boolean;
   createdAt?: any;
   updatedAt?: any;
+  // Multi-battery support
+  batteries?: {
+    id: string;
+    name: string;
+    currentCharge: number;
+    health: number;
+    cycles?: number;
+    serialNumber?: string;
+    purchaseDate?: string;
+    lastCharged?: string;
+    status: 'healthy' | 'warning' | 'critical' | 'dead';
+  }[];
 }
 
 interface DeviceContextType {

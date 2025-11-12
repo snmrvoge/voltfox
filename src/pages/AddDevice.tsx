@@ -10,6 +10,7 @@ import { doc, getDoc, updateDoc, increment, collection, getDocs, query, setDoc, 
 import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
 import { AutocompleteInput } from '../components/AutocompleteInput';
+import { BatteryManager } from '../components/BatteryManager';
 
 interface CommunityDevice {
   id: string;
@@ -69,6 +70,9 @@ const AddDevice: React.FC = () => {
   // Autocomplete suggestions
   const [brandSuggestions, setBrandSuggestions] = useState<string[]>([]);
   const [modelSuggestions, setModelSuggestions] = useState<string[]>([]);
+
+  // Multi-battery support
+  const [batteries, setBatteries] = useState<any[]>([]);
 
   const deviceTypes = [
     'drone',
@@ -303,6 +307,11 @@ const AddDevice: React.FC = () => {
       if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
       if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
 
+      // Add batteries if any
+      if (batteries.length > 0) {
+        cleanedData.batteries = batteries;
+      }
+
       // Add community device reference if linked
       if (selectedCommunityDevice && hasOptedIn) {
         cleanedData.communityDeviceId = selectedCommunityDevice.id;
@@ -534,7 +543,7 @@ const AddDevice: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Suche nach Marke, Modell oder Typ..."
+                  placeholder={formData.brand ? `Suche nach Modell oder Typ in ${formData.brand}-Geräten...` : "Suche nach Marke, Modell oder Typ..."}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -547,12 +556,20 @@ const AddDevice: React.FC = () => {
 
                 <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {communityDevices
-                    .filter(d =>
-                      !searchQuery ||
-                      d.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      d.type.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
+                    .filter(d => {
+                      // First filter: if brand is entered, only show devices of that brand
+                      if (formData.brand && d.brand.toLowerCase() !== formData.brand.toLowerCase()) {
+                        return false;
+                      }
+
+                      // Second filter: search query within the filtered brand
+                      if (searchQuery) {
+                        return d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                               d.type.toLowerCase().includes(searchQuery.toLowerCase());
+                      }
+
+                      return true;
+                    })
                     .slice(0, 10)
                     .map((device) => (
                       <div
@@ -628,14 +645,20 @@ const AddDevice: React.FC = () => {
                         </div>
                       </div>
                     ))}
-                  {communityDevices.filter(d =>
-                    !searchQuery ||
-                    d.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    d.type.toLowerCase().includes(searchQuery.toLowerCase())
-                  ).length === 0 && (
+                  {communityDevices.filter(d => {
+                    if (formData.brand && d.brand.toLowerCase() !== formData.brand.toLowerCase()) {
+                      return false;
+                    }
+                    if (searchQuery) {
+                      return d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             d.type.toLowerCase().includes(searchQuery.toLowerCase());
+                    }
+                    return true;
+                  }).length === 0 && (
                     <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-                      Keine passenden Geräte gefunden. Du kannst das Gerät später in der Community-Seite hinzufügen.
+                      {formData.brand
+                        ? `Keine ${formData.brand}-Geräte gefunden. Du kannst das Gerät über die Checkbox "Mit Community teilen" hinzufügen.`
+                        : 'Keine passenden Geräte gefunden. Du kannst das Gerät später in der Community-Seite hinzufügen.'}
                     </div>
                   )}
                 </div>
@@ -1017,6 +1040,13 @@ const AddDevice: React.FC = () => {
             <option value="Lead-Acid">Lead-Acid</option>
           </select>
         </div>
+
+        {/* Battery Management Section */}
+        <BatteryManager
+          batteries={batteries}
+          onBatteriesChange={setBatteries}
+          deviceName={formData.name || 'Neues Gerät'}
+        />
 
         {/* Insurance Information Section */}
         <div style={{

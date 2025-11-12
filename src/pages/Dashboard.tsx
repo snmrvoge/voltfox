@@ -369,6 +369,69 @@ export default function Dashboard() {
                     </div>
                   )}
 
+                  {/* Additional Batteries */}
+                  {device.batteries && device.batteries.length > 0 && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      marginTop: '0.75rem',
+                      paddingTop: '0.75rem',
+                      borderTop: '1px solid #E5E7EB'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginBottom: '0.5rem',
+                        color: '#6B7280',
+                        fontWeight: '600'
+                      }}>
+                        <span>🔋</span>
+                        <span>Zusatzakkus ({device.batteries.length})</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {device.batteries.map((battery: any) => (
+                          <div
+                            key={battery.id}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '0.5rem',
+                              background: battery.status === 'critical' ? '#FEE2E2' :
+                                         battery.status === 'warning' ? '#FEF3C7' :
+                                         battery.status === 'healthy' ? '#D1FAE5' : '#F3F4F6',
+                              borderRadius: '6px',
+                              border: `1px solid ${
+                                battery.status === 'critical' ? '#FCA5A5' :
+                                battery.status === 'warning' ? '#FCD34D' :
+                                battery.status === 'healthy' ? '#6EE7B7' : '#D1D5DB'
+                              }`
+                            }}
+                          >
+                            <span style={{
+                              fontWeight: '500',
+                              color: '#374151',
+                              fontSize: '0.8rem'
+                            }}>
+                              {battery.name}
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                                {battery.currentCharge}%
+                              </span>
+                              <Battery
+                                size={14}
+                                color={battery.status === 'critical' ? '#EF4444' :
+                                       battery.status === 'warning' ? '#F59E0B' :
+                                       battery.status === 'healthy' ? '#10B981' : '#6B7280'}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {device.currentCharge < 20 && (
                     <div className="device-warning">
                       <AlertCircle size={16} />

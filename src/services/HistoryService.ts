@@ -221,6 +221,69 @@ export class HistoryService {
   }
 
   /**
+   * Record a snapshot for a battery within a device
+   */
+  static async recordBatterySnapshot(
+    userId: string,
+    deviceId: string,
+    batteryId: string,
+    snapshot: Omit<DeviceSnapshot, 'timestamp'>
+  ): Promise<void> {
+    try {
+      const historyRef = collection(db, 'users', userId, 'devices', deviceId, 'batteries', batteryId, 'history');
+
+      await addDoc(historyRef, {
+        ...snapshot,
+        timestamp: Timestamp.now()
+      });
+
+      console.log(`Battery snapshot recorded for device ${deviceId}, battery ${batteryId}`);
+    } catch (error) {
+      console.error('Error recording battery snapshot:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get history for a specific battery
+   */
+  static async getBatteryHistory(
+    userId: string,
+    deviceId: string,
+    batteryId: string,
+    daysBack: number = 7
+  ): Promise<HistoryEntry[]> {
+    try {
+      const historyRef = collection(db, 'users', userId, 'devices', deviceId, 'batteries', batteryId, 'history');
+
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysBack);
+
+      const q = query(
+        historyRef,
+        where('timestamp', '>=', Timestamp.fromDate(startDate)),
+        orderBy('timestamp', 'desc'),
+        limit(1000)
+      );
+
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        timestamp: doc.data().timestamp.toDate(),
+        currentCharge: doc.data().currentCharge,
+        health: doc.data().health,
+        voltage: doc.data().voltage,
+        temperature: doc.data().temperature,
+        status: doc.data().status
+      }));
+    } catch (error) {
+      console.error('Error getting battery history:', error);
+      return [];
+    }
+  }
+
+  /**
    * Record snapshots for all user devices
    */
   static async recordAllDeviceSnapshots(userId: string): Promise<void> {

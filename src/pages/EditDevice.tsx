@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
 import { DeviceHistory } from '../components/DeviceHistory';
 import { AutocompleteInput } from '../components/AutocompleteInput';
+import { BatteryManager } from '../components/BatteryManager';
 
 interface CommunityDevice {
   id: string;
@@ -59,6 +60,7 @@ const EditDevice: React.FC = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
+  const [showUsageInfo, setShowUsageInfo] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
 
   // Autocomplete suggestions
@@ -67,6 +69,9 @@ const EditDevice: React.FC = () => {
   const [modelSuggestions, setModelSuggestions] = useState<string[]>([]);
   const [shareWithCommunity, setShareWithCommunity] = useState(false);
   const [isUnlinkingFromCommunity, setIsUnlinkingFromCommunity] = useState(false);
+
+  // Multi-battery support
+  const [batteries, setBatteries] = useState<any[]>([]);
 
   useEffect(() => {
     if (device) {
@@ -90,6 +95,11 @@ const EditDevice: React.FC = () => {
         warrantyUntil: device.warrantyUntil || ''
       });
       setImageSource(device.imageUrl ? 'upload' : 'emoji');
+
+      // Initialize batteries if device has them
+      if ((device as any).batteries) {
+        setBatteries((device as any).batteries);
+      }
 
       // Check if device is already linked to community
       if ((device as any).communityDeviceId) {
@@ -379,6 +389,11 @@ const EditDevice: React.FC = () => {
       if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
       if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
 
+      // Add batteries if any
+      if (batteries.length > 0) {
+        cleanedData.batteries = batteries;
+      }
+
       // Handle sharing with community
       if (shareWithCommunity && formData.brand && formData.model && !(device as any)?.communityDeviceId) {
         try {
@@ -503,38 +518,58 @@ const EditDevice: React.FC = () => {
         <p>Aktualisiere die Details deines Geräts</p>
       </div>
 
-      {/* Usage Information Display */}
+      {/* Usage Information Display - Compact Version */}
       {(device.lastUsed || device.lastCharged || device.createdAt || device.isDefective) && (
         <div style={{
-          background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-          padding: '1.5rem',
-          borderRadius: '15px',
-          marginBottom: '1.5rem',
-          border: '2px solid #3B82F6',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+          background: 'rgba(255, 255, 255, 0.7)',
+          padding: '0.75rem',
+          borderRadius: '12px',
+          marginBottom: '1rem',
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
         }}>
-          <h3 style={{
-            color: '#1E40AF',
-            fontSize: '1.1rem',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            📊 Nutzungsinformationen
-          </h3>
+          <div
+            onClick={() => setShowUsageInfo(!showUsageInfo)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              marginBottom: showUsageInfo ? '0.5rem' : '0'
+            }}
+          >
+            <h3 style={{
+              color: '#4B5563',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              📊 Nutzungsinformationen
+            </h3>
+            <span style={{
+              fontSize: '1rem',
+              transition: 'transform 0.3s',
+              transform: showUsageInfo ? 'rotate(180deg)' : 'rotate(0)',
+              color: '#9CA3AF'
+            }}>
+              ▼
+            </span>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {showUsageInfo && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
             {device.lastUsed && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                color: '#1E40AF',
-                fontSize: '0.95rem'
+                gap: '6px',
+                color: '#6B7280',
+                fontSize: '0.8rem'
               }}>
-                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>✅ Letzte Benutzung:</span>
+                <span style={{ fontWeight: '600', minWidth: '100px', color: '#374151' }}>✅ Letzte Benutzung:</span>
                 <span>
                   {(() => {
                     const lastUsedDate = new Date(device.lastUsed);
@@ -562,11 +597,11 @@ const EditDevice: React.FC = () => {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                color: '#1E40AF',
-                fontSize: '0.95rem'
+                gap: '6px',
+                color: '#6B7280',
+                fontSize: '0.8rem'
               }}>
-                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>🔋 Letzte Ladung:</span>
+                <span style={{ fontWeight: '600', minWidth: '100px', color: '#374151' }}>🔋 Letzte Ladung:</span>
                 <span>
                   {(() => {
                     const lastChargedDate = new Date(device.lastCharged);
@@ -618,11 +653,11 @@ const EditDevice: React.FC = () => {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    color: '#1E40AF',
-                    fontSize: '0.95rem'
+                    gap: '6px',
+                    color: '#6B7280',
+                    fontSize: '0.8rem'
                   }}>
-                    <span style={{ fontWeight: 'bold', minWidth: '140px' }}>📅 Gerät hinzugefügt:</span>
+                    <span style={{ fontWeight: '600', minWidth: '100px', color: '#374151' }}>📅 Gerät hinzugefügt:</span>
                     <span>{relativeTime} ({absoluteDate})</span>
                   </div>
                 );
@@ -636,10 +671,10 @@ const EditDevice: React.FC = () => {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: '6px',
                 color: '#DC2626',
-                fontSize: '0.95rem',
-                fontWeight: 'bold',
+                fontSize: '0.8rem',
+                fontWeight: '600',
                 padding: '0.5rem',
                 background: '#FEE2E2',
                 borderRadius: '8px',
@@ -667,7 +702,8 @@ const EditDevice: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
       )}
 
       <form onSubmit={handleSubmit} className="device-form">
@@ -1173,13 +1209,23 @@ const EditDevice: React.FC = () => {
           />
         </div>
 
+        {/* Battery Management Section */}
+        <BatteryManager
+          batteries={batteries}
+          onBatteriesChange={setBatteries}
+          deviceName={formData.name}
+          userId={currentUser?.uid}
+          deviceId={id}
+        />
+
         {/* Insurance Information Section */}
         <div style={{
-          marginTop: '2rem',
-          padding: '1.5rem',
-          background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 210, 63, 0.1) 100%)',
+          marginTop: '1rem',
+          padding: '1rem',
+          background: 'rgba(255, 255, 255, 0.7)',
           borderRadius: '12px',
-          border: '2px solid rgba(255, 107, 53, 0.3)'
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
         }}>
           <div
             onClick={() => setShowInsuranceFields(!showInsuranceFields)}
@@ -1188,13 +1234,18 @@ const EditDevice: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               cursor: 'pointer',
-              marginBottom: showInsuranceFields ? '1.5rem' : '0'
+              marginBottom: showInsuranceFields ? '0.75rem' : '0'
             }}
           >
-            <h3 style={{ margin: 0, color: 'var(--vf-primary)' }}>
+            <h3 style={{ margin: 0, color: '#4B5563', fontSize: '0.95rem', fontWeight: '600' }}>
               🛡️ Versicherungsangaben (optional)
             </h3>
-            <span style={{ fontSize: '1.5rem', transition: 'transform 0.3s', transform: showInsuranceFields ? 'rotate(180deg)' : 'rotate(0)' }}>
+            <span style={{
+              fontSize: '1.2rem',
+              transition: 'transform 0.3s',
+              transform: showInsuranceFields ? 'rotate(180deg)' : 'rotate(0)',
+              color: '#9CA3AF'
+            }}>
               ▼
             </span>
           </div>
