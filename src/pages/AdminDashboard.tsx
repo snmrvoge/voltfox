@@ -30,7 +30,7 @@ const AdminDashboard: React.FC = () => {
   const [totalInsuranceValue, setTotalInsuranceValue] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<'email' | 'createdAt' | 'plan' | 'devices' | 'insuranceValue'>('createdAt');
+  const [sortBy, setSortBy] = useState<'email' | 'createdAt' | 'plan' | 'status' | 'devices' | 'insuranceValue'>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const usersPerPage = 10;
 
@@ -196,6 +196,10 @@ const AdminDashboard: React.FC = () => {
         const planOrder = { business: 3, pro: 2, free: 1 };
         aVal = planOrder[a.plan];
         bVal = planOrder[b.plan];
+        break;
+      case 'status':
+        aVal = a.isBlocked ? 0 : 1; // blocked = 0, active = 1
+        bVal = b.isBlocked ? 0 : 1;
         break;
       case 'devices':
         aVal = a.deviceCount;
@@ -483,7 +487,12 @@ const AdminDashboard: React.FC = () => {
                     >
                       Plan {sortBy === 'plan' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.status')}</th>
+                    <th
+                      onClick={() => handleSort('status')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      {t('admin.table.status')} {sortBy === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
                     <th
                       onClick={() => handleSort('devices')}
                       style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
