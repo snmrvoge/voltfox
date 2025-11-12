@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { auth, googleProvider } from '../config/firebase';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -38,6 +39,21 @@ export default function Login() {
       console.error('Google Sign In error:', err);
       setError('Google Sign In failed');
       setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      toast.error('Bitte gib deine E-Mail-Adresse ein');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast.success('Password-Reset-Link wurde an deine E-Mail gesendet!');
+    } catch (err) {
+      console.error('Password reset error:', err);
+      toast.error('Fehler beim Senden des Password-Reset-Links');
     }
   };
 
@@ -106,7 +122,7 @@ export default function Login() {
             />
           </div>
 
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
@@ -130,6 +146,27 @@ export default function Login() {
               }}
               placeholder={t('auth.login.passwordPlaceholder')}
             />
+          </div>
+
+          <div style={{ marginBottom: '2rem', textAlign: 'right' }}>
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#FF6B35',
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.color = '#FFD23F')}
+              onMouseOut={(e) => (e.currentTarget.style.color = '#FF6B35')}
+            >
+              Passwort vergessen?
+            </button>
           </div>
 
           <button

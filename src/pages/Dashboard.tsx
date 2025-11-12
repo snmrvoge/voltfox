@@ -18,12 +18,28 @@ export default function Dashboard() {
 
   // Check if user is admin (will be loaded from Firestore)
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [userName, setUserName] = React.useState('');
 
-  // Load admin status from Firestore
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Guten Morgen';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Schönen Nachmittag';
+    } else if (hour >= 18 && hour < 22) {
+      return 'Guten Abend';
+    } else {
+      return 'Gute Nacht';
+    }
+  };
+
+  // Load admin status and user name from Firestore
   React.useEffect(() => {
-    const checkAdminStatus = async () => {
+    const loadUserData = async () => {
       if (!currentUser) {
         setIsAdmin(false);
+        setUserName('');
         return;
       }
 
@@ -34,16 +50,19 @@ export default function Dashboard() {
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           setIsAdmin(userData?.isAdmin === true || userData?.role === 'admin');
+          setUserName(userData?.firstName || '');
         } else {
           setIsAdmin(false);
+          setUserName('');
         }
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error loading user data:', error);
         setIsAdmin(false);
+        setUserName('');
       }
     };
 
-    checkAdminStatus();
+    loadUserData();
   }, [currentUser]);
 
   const handleSignOut = async () => {
@@ -76,7 +95,7 @@ export default function Dashboard() {
           marginBottom: '2rem'
         }}>
           <h1 style={{ color: '#2E3A4B' }}>
-            🦊 {t('dashboard.title')}
+            {userName ? `${getTimeBasedGreeting()}, ${userName}! 🦊` : `🦊 ${t('dashboard.title')}`}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <button

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, MapPin, DollarSign, Save, ArrowLeft, Bell, Mail, Smartphone } from 'lucide-react';
+import { User, MapPin, DollarSign, Save, ArrowLeft, Bell, Mail, Smartphone, Users } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import toast from 'react-hot-toast';
@@ -34,6 +34,10 @@ interface NotificationPreferences {
   notifyOnWarning: boolean;
   notifyOnLowHealth: boolean;
   notifyOnWarrantyExpiration: boolean;
+}
+
+interface CommunitySettings {
+  shareDataWithCommunity: boolean;
 }
 
 // Address Autocomplete Component
@@ -198,6 +202,10 @@ const Settings: React.FC = () => {
     notifyOnWarrantyExpiration: true
   });
 
+  const [communitySettings, setCommunitySettings] = useState<CommunitySettings>({
+    shareDataWithCommunity: false
+  });
+
   // Load Google Maps
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
@@ -245,6 +253,14 @@ const Settings: React.FC = () => {
               ...data.notificationPreferences
             });
           }
+
+          // Load community settings
+          if (data.communitySettings) {
+            setCommunitySettings({
+              ...communitySettings,
+              ...data.communitySettings
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading profile:', error);
@@ -267,6 +283,7 @@ const Settings: React.FC = () => {
         {
           ...profile,
           notificationPreferences: notifications,
+          communitySettings: communitySettings,
           updatedAt: new Date().toISOString()
         },
         { merge: true }
@@ -1012,6 +1029,94 @@ const Settings: React.FC = () => {
                 }} />
               </span>
             </label>
+          </div>
+        </div>
+
+        {/* Community Settings */}
+        <div style={{
+          background: 'white',
+          borderRadius: '15px',
+          padding: '2rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1.5rem'
+          }}>
+            <Users size={24} color="var(--vf-primary)" />
+            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Community</h2>
+          </div>
+          <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+            Unterstütze die VoltFox Community durch anonyme Datenfreigabe
+          </p>
+
+          {/* Share with Community Toggle */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 210, 63, 0.1) 100%)',
+            borderRadius: '10px',
+            border: '2px solid rgba(255, 107, 53, 0.2)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <Users size={18} color="var(--vf-primary)" />
+                <strong style={{ color: '#2E3A4B' }}>Daten mit Community teilen</strong>
+              </div>
+              <p style={{ color: '#666', fontSize: '0.85rem', margin: 0 }}>
+                Hilf anderen Nutzern durch anonyme Gerätedaten und vergleiche deine Batterien mit der Community
+              </p>
+            </div>
+            <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px', flexShrink: 0, marginLeft: '1rem' }}>
+              <input
+                type="checkbox"
+                checked={communitySettings.shareDataWithCommunity}
+                onChange={(e) => setCommunitySettings({ ...communitySettings, shareDataWithCommunity: e.target.checked })}
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
+              <span style={{
+                position: 'absolute',
+                cursor: 'pointer',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: communitySettings.shareDataWithCommunity ? 'var(--vf-primary)' : '#ccc',
+                transition: '0.4s',
+                borderRadius: '34px'
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  height: '26px',
+                  width: '26px',
+                  left: communitySettings.shareDataWithCommunity ? '30px' : '4px',
+                  bottom: '4px',
+                  background: 'white',
+                  transition: '0.4s',
+                  borderRadius: '50%'
+                }} />
+              </span>
+            </label>
+          </div>
+
+          {/* Info Box */}
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: '#F3F4F6',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
+              <strong>🔒 Deine Privatsphäre ist geschützt:</strong><br/>
+              Wir speichern nur anonymisierte Gerätedaten (Typ, Marke, Batteriestatus).
+              Keine persönlichen Informationen, Namen oder Standorte werden geteilt.
+            </p>
           </div>
         </div>
 
