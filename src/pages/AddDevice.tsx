@@ -6,9 +6,10 @@ import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, db } from '../config/firebase';
-import { collection, getDocs, query, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, getDocs, query, setDoc, where, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
+import { AutocompleteInput } from '../components/AutocompleteInput';
 
 interface CommunityDevice {
   id: string;
@@ -63,6 +64,11 @@ const AddDevice: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCommunitySearch, setShowCommunitySearch] = useState(false);
   const [hasOptedIn, setHasOptedIn] = useState(false);
+  const [shareWithCommunity, setShareWithCommunity] = useState(false);
+
+  // Autocomplete suggestions
+  const [brandSuggestions, setBrandSuggestions] = useState<string[]>([]);
+  const [modelSuggestions, setModelSuggestions] = useState<string[]>([]);
 
   const deviceTypes = [
     'drone',
@@ -100,10 +106,9 @@ const AddDevice: React.FC = () => {
     loadCommunitySettings();
   }, [currentUser]);
 
-  // Load community devices
+  // Load community devices for autocomplete
   useEffect(() => {
     const loadCommunityDevices = async () => {
-      if (!hasOptedIn) return;
       try {
         const devicesQuery = query(collection(db, 'communityDevices'));
         const querySnapshot = await getDocs(devicesQuery);
@@ -115,12 +120,36 @@ const AddDevice: React.FC = () => {
           } as CommunityDevice);
         });
         setCommunityDevices(devices);
+
+        // Extract unique brands for autocomplete
+        const uniqueBrands = Array.from(new Set(devices.map(d => d.brand).filter(Boolean)));
+        setBrandSuggestions(uniqueBrands.sort());
+
+        console.log(`Loaded ${devices.length} community devices for autocomplete`);
       } catch (error) {
         console.error('Error loading community devices:', error);
+        // Set empty arrays on error so the component doesn't break
+        setCommunityDevices([]);
+        setBrandSuggestions([]);
+        // Don't show error to user - autocomplete will just be empty
       }
     };
     loadCommunityDevices();
-  }, [hasOptedIn]);
+  }, []);
+
+  // Update model suggestions when brand changes
+  useEffect(() => {
+    if (formData.brand && communityDevices.length > 0) {
+      const modelsForBrand = communityDevices
+        .filter(d => d.brand.toLowerCase() === formData.brand.toLowerCase())
+        .map(d => d.model)
+        .filter(Boolean);
+      const uniqueModels = Array.from(new Set(modelsForBrand));
+      setModelSuggestions(uniqueModels.sort());
+    } else {
+      setModelSuggestions([]);
+    }
+  }, [formData.brand, communityDevices]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -279,10 +308,61 @@ const AddDevice: React.FC = () => {
         cleanedData.communityDeviceId = selectedCommunityDevice.id;
       }
 
+      // Handle sharing with community
+      if (shareWithCommunity && formData.brand && formData.model) {
+        try {
+          // Create sanitized ID from brand+model
+          const sanitizedBrand = formData.brand.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const sanitizedModel = formData.model.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const communityDeviceId = `${sanitizedBrand}-${sanitizedModel}`;
+
+          const communityDeviceRef = doc(db, 'communityDevices', communityDeviceId);
+          const communityDeviceSnap = await getDoc(communityDeviceRef);
+
+          if (communityDeviceSnap.exists()) {
+            // Device already exists - increment counters
+            const existingData = communityDeviceSnap.data();
+            const newUserCount = (existingData.userCount || 0) + 1;
+            const newTotalHealthSum = (existingData.totalHealthSum || 0) + formData.health;
+            const newAvgHealth = Math.round(newTotalHealthSum / newUserCount);
+
+            await updateDoc(communityDeviceRef, {
+              userCount: newUserCount,
+              totalHealthSum: newTotalHealthSum,
+              avgHealth: newAvgHealth
+            });
+
+            console.log(`Updated existing community device: ${communityDeviceId}`);
+          } else {
+            // Device doesn't exist - create new one
+            await setDoc(communityDeviceRef, {
+              brand: formData.brand,
+              model: formData.model,
+              type: formData.type,
+              icon: formData.icon || '🔋',
+              imageUrl: formData.imageUrl || '',
+              userCount: 1,
+              totalHealthSum: formData.health,
+              avgHealth: formData.health,
+              createdAt: serverTimestamp()
+            });
+
+            console.log(`Created new community device: ${communityDeviceId}`);
+          }
+
+          // Link user's device to community device
+          cleanedData.communityDeviceId = communityDeviceId;
+        } catch (error) {
+          console.error('Error sharing with community:', error);
+          // Don't block device creation if community sharing fails
+          toast.error('Community-Freigabe fehlgeschlagen, aber Gerät wird hinzugefügt');
+        }
+      }
+
       await addDevice(cleanedData);
 
-      // Update community device statistics if linked and opted in
-      if (selectedCommunityDevice && hasOptedIn) {
+      // Update community device statistics if linked and opted in (but not if we already shared with community above)
+      if (selectedCommunityDevice && hasOptedIn && !shareWithCommunity) {
         try {
           const communityDeviceRef = doc(db, 'communityDevices', selectedCommunityDevice.id);
           await updateDoc(communityDeviceRef, {
@@ -295,6 +375,8 @@ const AddDevice: React.FC = () => {
           console.error('Error updating community device stats:', error);
           toast.success('Gerät hinzugefügt!');
         }
+      } else if (shareWithCommunity) {
+        toast.success('🌍 Gerät hinzugefügt und mit Community geteilt!');
       } else {
         toast.success('Gerät hinzugefügt!');
       }
@@ -349,24 +431,65 @@ const AddDevice: React.FC = () => {
         </div>
 
         <div className="form-group">
-          <label>Brand / Hersteller</label>
-          <input
-            type="text"
+          <AutocompleteInput
             value={formData.brand}
-            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, brand: value })}
+            suggestions={brandSuggestions}
             placeholder="DJI, Apple, Bosch..."
+            label="Brand / Hersteller"
           />
         </div>
 
         <div className="form-group">
-          <label>Model / Modell</label>
-          <input
-            type="text"
+          <AutocompleteInput
             value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, model: value })}
+            suggestions={modelSuggestions}
             placeholder="Mavic 3, iPhone 15 Pro..."
+            label="Model / Modell"
+            disabled={!formData.brand}
           />
         </div>
+
+        {/* Share with Community Checkbox */}
+        {formData.brand && formData.model && (
+          <div style={{
+            marginBottom: '1.5rem',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+            borderRadius: '12px',
+            border: '2px solid rgba(102, 126, 234, 0.2)'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}>
+              <input
+                type="checkbox"
+                checked={shareWithCommunity}
+                onChange={(e) => setShareWithCommunity(e.target.checked)}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  marginTop: '2px',
+                  cursor: 'pointer',
+                  accentColor: '#667eea'
+                }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, color: '#2E3A4B', marginBottom: '0.25rem' }}>
+                  🌍 Mit Community teilen
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: '1.4' }}>
+                  Teile dein {formData.brand} {formData.model} mit anderen Nutzern und trage zur Community-Datenbank bei. Dein Gerät wird automatisch verlinkt.
+                </div>
+              </div>
+            </label>
+          </div>
+        )}
 
         {/* Community Device Search */}
         {hasOptedIn && (

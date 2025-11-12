@@ -5,10 +5,25 @@ import { Battery, Trash2, ArrowLeft, Upload, Image as ImageIcon, Sparkles } from
 import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../config/firebase';
+import { storage, db } from '../config/firebase';
+import { collection, getDocs, query, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
 import { DeviceHistory } from '../components/DeviceHistory';
+import { AutocompleteInput } from '../components/AutocompleteInput';
+
+interface CommunityDevice {
+  id: string;
+  type: string;
+  brand: string;
+  model: string;
+  userCount: number;
+  totalHealthSum: number;
+  avgHealth: number;
+  imageUrl?: string;
+  icon?: string;
+  createdAt: string;
+}
 
 const EditDevice: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +35,8 @@ const EditDevice: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    brand: '',
+    model: '',
     type: 'drone',
     icon: '🔋',
     imageUrl: '',
@@ -44,10 +61,19 @@ const EditDevice: React.FC = () => {
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
 
+  // Autocomplete suggestions
+  const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
+  const [brandSuggestions, setBrandSuggestions] = useState<string[]>([]);
+  const [modelSuggestions, setModelSuggestions] = useState<string[]>([]);
+  const [shareWithCommunity, setShareWithCommunity] = useState(false);
+  const [isUnlinkingFromCommunity, setIsUnlinkingFromCommunity] = useState(false);
+
   useEffect(() => {
     if (device) {
       setFormData({
         name: device.name,
+        brand: device.brand || '',
+        model: device.model || '',
         type: device.type,
         icon: device.icon || '🔋',
         imageUrl: device.imageUrl || '',
@@ -64,8 +90,58 @@ const EditDevice: React.FC = () => {
         warrantyUntil: device.warrantyUntil || ''
       });
       setImageSource(device.imageUrl ? 'upload' : 'emoji');
+
+      // Check if device is already linked to community
+      if ((device as any).communityDeviceId) {
+        setShareWithCommunity(false); // Already linked, don't show as "to share"
+      }
     }
   }, [device]);
+
+  // Load community devices for autocomplete
+  useEffect(() => {
+    const loadCommunityDevices = async () => {
+      try {
+        const devicesQuery = query(collection(db, 'communityDevices'));
+        const querySnapshot = await getDocs(devicesQuery);
+        const devices: CommunityDevice[] = [];
+        querySnapshot.forEach((doc) => {
+          devices.push({
+            id: doc.id,
+            ...doc.data()
+          } as CommunityDevice);
+        });
+        setCommunityDevices(devices);
+
+        // Extract unique brands for autocomplete
+        const uniqueBrands = Array.from(new Set(devices.map(d => d.brand).filter(Boolean)));
+        setBrandSuggestions(uniqueBrands.sort());
+
+        console.log(`Loaded ${devices.length} community devices for autocomplete`);
+      } catch (error) {
+        console.error('Error loading community devices:', error);
+        // Set empty arrays on error so the component doesn't break
+        setCommunityDevices([]);
+        setBrandSuggestions([]);
+        // Don't show error to user - autocomplete will just be empty
+      }
+    };
+    loadCommunityDevices();
+  }, []);
+
+  // Update model suggestions when brand changes
+  useEffect(() => {
+    if (formData.brand && communityDevices.length > 0) {
+      const modelsForBrand = communityDevices
+        .filter(d => d.brand.toLowerCase() === formData.brand.toLowerCase())
+        .map(d => d.model)
+        .filter(Boolean);
+      const uniqueModels = Array.from(new Set(modelsForBrand));
+      setModelSuggestions(uniqueModels.sort());
+    } else {
+      setModelSuggestions([]);
+    }
+  }, [formData.brand, communityDevices]);
 
   const deviceTypes = [
     'drone',
@@ -201,6 +277,67 @@ const EditDevice: React.FC = () => {
     }
   };
 
+  const handleUnlinkFromCommunity = async () => {
+    if (!id || !device || !(device as any)?.communityDeviceId) return;
+
+    const confirmed = window.confirm(
+      'Möchtest du die Verknüpfung zur Community wirklich entfernen?\n\n' +
+      'Dein Gerät wird aus der Community-Statistik entfernt und die Verknüpfung aufgehoben.'
+    );
+
+    if (!confirmed) return;
+
+    setIsUnlinkingFromCommunity(true);
+
+    try {
+      const communityDeviceId = (device as any).communityDeviceId;
+      const communityDeviceRef = doc(db, 'communityDevices', communityDeviceId);
+      const communityDeviceSnap = await getDoc(communityDeviceRef);
+
+      if (communityDeviceSnap.exists()) {
+        const communityData = communityDeviceSnap.data();
+        const currentUserCount = communityData.userCount || 1;
+        const currentTotalHealthSum = communityData.totalHealthSum || device.health;
+
+        if (currentUserCount <= 1) {
+          // Last user - delete the community device entirely
+          await updateDoc(communityDeviceRef, {
+            userCount: 0,
+            totalHealthSum: 0,
+            avgHealth: 0
+          });
+          console.log(`Last user unlinked, community device ${communityDeviceId} stats reset to 0`);
+        } else {
+          // Decrement counters
+          const newUserCount = currentUserCount - 1;
+          const newTotalHealthSum = Math.max(0, currentTotalHealthSum - device.health);
+          const newAvgHealth = newUserCount > 0 ? Math.round(newTotalHealthSum / newUserCount) : 0;
+
+          await updateDoc(communityDeviceRef, {
+            userCount: newUserCount,
+            totalHealthSum: newTotalHealthSum,
+            avgHealth: newAvgHealth
+          });
+
+          console.log(`Updated community device ${communityDeviceId}: userCount=${newUserCount}`);
+        }
+      }
+
+      // Remove communityDeviceId from user's device
+      await updateDevice(id, { communityDeviceId: null } as any);
+
+      toast.success('🔓 Verknüpfung zur Community entfernt');
+
+      // Reload page to show updated state
+      window.location.reload();
+    } catch (error) {
+      console.error('Error unlinking from community:', error);
+      toast.error('Fehler beim Trennen der Verknüpfung');
+    } finally {
+      setIsUnlinkingFromCommunity(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -217,6 +354,10 @@ const EditDevice: React.FC = () => {
         health: formData.health,
         reminderFrequency: formData.reminderFrequency
       };
+
+      // Add brand and model if they have values
+      if (formData.brand) cleanedData.brand = formData.brand;
+      if (formData.model) cleanedData.model = formData.model;
 
       // Add icon or imageUrl
       if (formData.imageUrl) {
@@ -238,10 +379,67 @@ const EditDevice: React.FC = () => {
       if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
       if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
 
+      // Handle sharing with community
+      if (shareWithCommunity && formData.brand && formData.model && !(device as any)?.communityDeviceId) {
+        try {
+          // Create sanitized ID from brand+model
+          const sanitizedBrand = formData.brand.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const sanitizedModel = formData.model.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          const communityDeviceId = `${sanitizedBrand}-${sanitizedModel}`;
+
+          const communityDeviceRef = doc(db, 'communityDevices', communityDeviceId);
+          const communityDeviceSnap = await getDoc(communityDeviceRef);
+
+          if (communityDeviceSnap.exists()) {
+            // Device already exists - increment counters
+            const existingData = communityDeviceSnap.data();
+            const newUserCount = (existingData.userCount || 0) + 1;
+            const newTotalHealthSum = (existingData.totalHealthSum || 0) + formData.health;
+            const newAvgHealth = Math.round(newTotalHealthSum / newUserCount);
+
+            await updateDoc(communityDeviceRef, {
+              userCount: newUserCount,
+              totalHealthSum: newTotalHealthSum,
+              avgHealth: newAvgHealth
+            });
+
+            console.log(`Updated existing community device: ${communityDeviceId}`);
+          } else {
+            // Device doesn't exist - create new one
+            await setDoc(communityDeviceRef, {
+              brand: formData.brand,
+              model: formData.model,
+              type: formData.type,
+              icon: formData.icon || '🔋',
+              imageUrl: formData.imageUrl || '',
+              userCount: 1,
+              totalHealthSum: formData.health,
+              avgHealth: formData.health,
+              createdAt: serverTimestamp()
+            });
+
+            console.log(`Created new community device: ${communityDeviceId}`);
+          }
+
+          // Link user's device to community device
+          cleanedData.communityDeviceId = communityDeviceId;
+        } catch (error) {
+          console.error('Error sharing with community:', error);
+          // Don't block device update if community sharing fails
+          toast.error('Community-Freigabe fehlgeschlagen, aber Änderungen werden gespeichert');
+        }
+      }
+
       console.log('Saving device with data:', cleanedData);
 
       await updateDevice(id, cleanedData);
-      toast.success('Änderungen gespeichert!');
+
+      if (shareWithCommunity && formData.brand && formData.model) {
+        toast.success('🌍 Änderungen gespeichert und mit Community geteilt!');
+      } else {
+        toast.success('Änderungen gespeichert!');
+      }
+
       navigate('/devices');
     } catch (error) {
       console.error('Error updating device:', error);
@@ -501,6 +699,132 @@ const EditDevice: React.FC = () => {
             ))}
           </select>
         </div>
+
+        <div className="form-group">
+          <AutocompleteInput
+            value={formData.brand}
+            onChange={(value) => setFormData({ ...formData, brand: value })}
+            suggestions={brandSuggestions}
+            placeholder="DJI, Apple, Bosch..."
+            label="Brand / Hersteller"
+          />
+        </div>
+
+        <div className="form-group">
+          <AutocompleteInput
+            value={formData.model}
+            onChange={(value) => setFormData({ ...formData, model: value })}
+            suggestions={modelSuggestions}
+            placeholder="Mavic 3, iPhone 15 Pro..."
+            label="Model / Modell"
+            disabled={!formData.brand}
+          />
+        </div>
+
+        {/* Share with Community Checkbox */}
+        {formData.brand && formData.model && !(device as any)?.communityDeviceId && (
+          <div style={{
+            marginBottom: '1.5rem',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+            borderRadius: '12px',
+            border: '2px solid rgba(102, 126, 234, 0.2)'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}>
+              <input
+                type="checkbox"
+                checked={shareWithCommunity}
+                onChange={(e) => setShareWithCommunity(e.target.checked)}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  marginTop: '2px',
+                  cursor: 'pointer',
+                  accentColor: '#667eea'
+                }}
+              />
+              <div>
+                <div style={{ fontWeight: 600, color: '#2E3A4B', marginBottom: '0.25rem' }}>
+                  🌍 Mit Community teilen
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: '1.4' }}>
+                  Teile dein {formData.brand} {formData.model} mit anderen Nutzern und trage zur Community-Datenbank bei. Dein Gerät wird automatisch verlinkt.
+                </div>
+              </div>
+            </label>
+          </div>
+        )}
+
+        {/* Show if already linked */}
+        {(device as any)?.communityDeviceId && (
+          <div style={{
+            marginBottom: '1.5rem',
+            padding: '1rem',
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(22, 163, 74, 0.08) 100%)',
+            borderRadius: '12px',
+            border: '2px solid rgba(34, 197, 94, 0.3)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                color: '#15803d',
+                fontWeight: 600,
+                flex: 1
+              }}>
+                <span style={{ fontSize: '1.25rem' }}>✅</span>
+                <div>
+                  <div style={{ marginBottom: '0.25rem' }}>
+                    Mit Community geteilt
+                  </div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 400, color: '#166534' }}>
+                    Dieses Gerät ist bereits in der Community-Datenbank und trägt zu den Statistiken bei.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleUnlinkFromCommunity}
+                disabled={isUnlinkingFromCommunity}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#DC2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isUnlinkingFromCommunity ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  whiteSpace: 'nowrap',
+                  opacity: isUnlinkingFromCommunity ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (!isUnlinkingFromCommunity) {
+                    e.currentTarget.style.background = '#B91C1C';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = '#DC2626';
+                }}
+              >
+                {isUnlinkingFromCommunity ? '⏳ Trenne...' : '🔓 Trennen'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="form-group">
           <label>

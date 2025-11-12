@@ -278,7 +278,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Auth state listener
   useEffect(() => {
+    // Failsafe: Set loading to false after 3 seconds if auth doesn't respond
+    const timeoutId = setTimeout(() => {
+      console.warn('Auth initialization timeout - setting loading to false');
+      setLoading(false);
+    }, 3000);
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(timeoutId); // Clear timeout if auth responds
+
       if (user) {
         setCurrentUser(user);
 
@@ -304,7 +312,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, []);
 
   const value = {
