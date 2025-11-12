@@ -278,8 +278,8 @@ export default function Dashboard() {
 
         {devices.length > 0 && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ color: '#2E3A4B' }}>{t('dashboard.yourDevices')}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <h2 style={{ color: '#2E3A4B', margin: 0 }}>{t('dashboard.yourDevices')}</h2>
               <Link to="/devices" style={{ color: '#FF6B35', textDecoration: 'none', fontWeight: 'bold' }}>
                 {t('dashboard.viewAll')} →
               </Link>

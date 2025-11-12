@@ -1,11 +1,23 @@
 // src/pages/Community.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, TrendingUp, Award, Battery, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, Award, Battery, AlertCircle, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import toast from 'react-hot-toast';
+
+interface CommunityDevice {
+  id: string;
+  type: string;
+  brand: string;
+  model: string;
+  userCount: number;
+  totalHealthSum: number;
+  avgHealth: number;
+  createdAt: string;
+}
 
 const Community: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +25,10 @@ const Community: React.FC = () => {
   const { devices } = useDevices();
   const [hasOptedIn, setHasOptedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
+  const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
+  const [newDevice, setNewDevice] = useState({ type: '', brand: '', model: '' });
+  const [addingDevice, setAddingDevice] = useState(false);
 
   // Load user's community settings
   useEffect(() => {
@@ -37,6 +53,74 @@ const Community: React.FC = () => {
 
     loadCommunitySettings();
   }, [currentUser]);
+
+  // Load community devices from Firestore
+  useEffect(() => {
+    const loadCommunityDevices = async () => {
+      if (!hasOptedIn) return;
+
+      try {
+        const devicesQuery = query(collection(db, 'communityDevices'), orderBy('avgHealth', 'desc'));
+        const querySnapshot = await getDocs(devicesQuery);
+
+        const devices: CommunityDevice[] = [];
+        querySnapshot.forEach((doc) => {
+          devices.push({
+            id: doc.id,
+            ...doc.data()
+          } as CommunityDevice);
+        });
+
+        setCommunityDevices(devices);
+      } catch (error) {
+        console.error('Error loading community devices:', error);
+      }
+    };
+
+    loadCommunityDevices();
+  }, [hasOptedIn]);
+
+  // Function to add a new community device
+  const handleAddDevice = async () => {
+    if (!newDevice.type || !newDevice.brand || !newDevice.model) {
+      toast.error('Bitte fülle alle Felder aus');
+      return;
+    }
+
+    setAddingDevice(true);
+    try {
+      await addDoc(collection(db, 'communityDevices'), {
+        type: newDevice.type,
+        brand: newDevice.brand,
+        model: newDevice.model,
+        userCount: 0,
+        totalHealthSum: 0,
+        avgHealth: 0,
+        createdAt: new Date().toISOString()
+      });
+
+      toast.success('Gerät zur Community-Datenbank hinzugefügt!');
+      setShowAddDeviceModal(false);
+      setNewDevice({ type: '', brand: '', model: '' });
+
+      // Reload devices
+      const devicesQuery = query(collection(db, 'communityDevices'), orderBy('avgHealth', 'desc'));
+      const querySnapshot = await getDocs(devicesQuery);
+      const devices: CommunityDevice[] = [];
+      querySnapshot.forEach((doc) => {
+        devices.push({
+          id: doc.id,
+          ...doc.data()
+        } as CommunityDevice);
+      });
+      setCommunityDevices(devices);
+    } catch (error) {
+      console.error('Error adding device:', error);
+      toast.error('Fehler beim Hinzufügen des Geräts');
+    } finally {
+      setAddingDevice(false);
+    }
+  };
 
   // Calculate user stats
   const userStats = {
@@ -196,14 +280,39 @@ const Community: React.FC = () => {
           Zurück zum Dashboard
         </button>
 
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#2E3A4B', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Users size={40} color="var(--vf-primary)" />
-            VoltFox Community
-          </h1>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
-            Vergleiche deine Geräte mit der Community und entdecke Trends
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#2E3A4B', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users size={40} color="var(--vf-primary)" />
+              VoltFox Community
+            </h1>
+            <p style={{ color: '#666', fontSize: '1.1rem' }}>
+              Vergleiche deine Geräte mit der Community und entdecke Trends
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddDeviceModal(true)}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+              transition: 'transform 0.2s'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            <Plus size={20} />
+            Gerät hinzufügen
+          </button>
         </div>
 
         {/* Community Stats Overview */}
@@ -454,6 +563,214 @@ const Community: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Community Devices Database */}
+        {communityDevices.length > 0 && (
+          <div style={{
+            background: 'white',
+            borderRadius: '15px',
+            padding: '2rem',
+            marginTop: '2rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <h2 style={{ marginBottom: '1.5rem', color: '#2E3A4B' }}>
+              📦 Community-Geräte-Datenbank
+            </h2>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              {communityDevices.map((device) => (
+                <div
+                  key={device.id}
+                  style={{
+                    padding: '1rem',
+                    background: '#f9f9f9',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e5e5'
+                  }}
+                >
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 600, color: '#2E3A4B', fontSize: '1.1rem' }}>
+                      {device.brand} {device.model}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.75rem' }}>
+                    {device.type}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid #e5e5e5' }}>
+                    <div>
+                      <span style={{ fontSize: '0.85rem', color: '#666' }}>Geräte: </span>
+                      <span style={{ fontWeight: 600, color: 'var(--vf-primary)' }}>{device.userCount}</span>
+                    </div>
+                    {device.avgHealth > 0 && (
+                      <div>
+                        <span style={{ fontSize: '0.85rem', color: '#666' }}>Ø Gesundheit: </span>
+                        <span style={{ fontWeight: 600, color: '#10B981' }}>{device.avgHealth}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Add Device Modal */}
+        {showAddDeviceModal && (
+          <div
+            onClick={() => !addingDevice && setShowAddDeviceModal(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              cursor: 'pointer'
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '20px',
+                padding: '2rem',
+                width: '90%',
+                maxWidth: '500px',
+                cursor: 'default',
+                boxShadow: '0 10px 50px rgba(0,0,0,0.5)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0, color: '#2E3A4B' }}>Gerät hinzufügen</h2>
+                <button
+                  onClick={() => setShowAddDeviceModal(false)}
+                  disabled={addingDevice}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: addingDevice ? 'not-allowed' : 'pointer',
+                    padding: '0.5rem',
+                    opacity: addingDevice ? 0.5 : 1
+                  }}
+                >
+                  <X size={24} color="#666" />
+                </button>
+              </div>
+
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                Füge ein neues Gerät zur Community-Datenbank hinzu. Andere User können es dann mit ihren Geräten verknüpfen.
+              </p>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: '500' }}>
+                  Gerätetyp
+                </label>
+                <input
+                  type="text"
+                  value={newDevice.type}
+                  onChange={(e) => setNewDevice({ ...newDevice, type: e.target.value })}
+                  placeholder="z.B. Drone, Smartphone, E-Bike..."
+                  disabled={addingDevice}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    opacity: addingDevice ? 0.5 : 1
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: '500' }}>
+                  Marke
+                </label>
+                <input
+                  type="text"
+                  value={newDevice.brand}
+                  onChange={(e) => setNewDevice({ ...newDevice, brand: e.target.value })}
+                  placeholder="z.B. DJI, Apple, Bosch..."
+                  disabled={addingDevice}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    opacity: addingDevice ? 0.5 : 1
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: '500' }}>
+                  Modell
+                </label>
+                <input
+                  type="text"
+                  value={newDevice.model}
+                  onChange={(e) => setNewDevice({ ...newDevice, model: e.target.value })}
+                  placeholder="z.B. Mavic 3, iPhone 15 Pro..."
+                  disabled={addingDevice}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    opacity: addingDevice ? 0.5 : 1
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => setShowAddDeviceModal(false)}
+                  disabled={addingDevice}
+                  style={{
+                    flex: 1,
+                    padding: '1rem',
+                    background: '#E5E7EB',
+                    color: '#2E3A4B',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    cursor: addingDevice ? 'not-allowed' : 'pointer',
+                    opacity: addingDevice ? 0.5 : 1
+                  }}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleAddDevice}
+                  disabled={addingDevice}
+                  style={{
+                    flex: 1,
+                    padding: '1rem',
+                    background: addingDevice ? '#ccc' : 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    cursor: addingDevice ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {addingDevice ? 'Wird hinzugefügt...' : 'Hinzufügen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

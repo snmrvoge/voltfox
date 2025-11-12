@@ -136,7 +136,7 @@ const AdminDashboard: React.FC = () => {
             insuranceValue: userInsuranceValue,
             currency: userCurrency,
             plan: userData.plan || 'free',
-            createdAt: userData.createdAt
+            createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.createdAt
           });
         } catch (deviceError) {
           console.error(`Error loading devices for user ${userId}:`, deviceError);
@@ -149,7 +149,7 @@ const AdminDashboard: React.FC = () => {
             insuranceValue: 0,
             currency: userCurrency,
             plan: userData.plan || 'free',
-            createdAt: userData.createdAt
+            createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.createdAt
           });
         }
       }
