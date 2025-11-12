@@ -935,10 +935,21 @@ section {
   transition: all 0.3s;
 }
 
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--vf-shadow-xl);
+  border-color: var(--vf-primary);
+}
+
 .pricing-featured {
   border-color: var(--vf-primary);
   transform: scale(1.05);
   box-shadow: var(--vf-shadow-lg);
+}
+
+.pricing-featured:hover {
+  transform: scale(1.08) translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(255, 107, 53, 0.3);
 }
 
 .pricing-badge {
