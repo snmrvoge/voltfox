@@ -25,13 +25,20 @@ const AddDevice: React.FC = () => {
     status: 'healthy' as 'healthy' | 'warning' | 'critical' | 'dead',
     currentCharge: 100,
     lastCharged: new Date().toISOString(),
-    reminderFrequency: 30
+    reminderFrequency: 30,
+    // Insurance fields
+    purchaseDate: '',
+    purchasePrice: undefined as number | undefined,
+    currentValue: undefined as number | undefined,
+    serialNumber: '',
+    warrantyUntil: ''
   });
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageSource, setImageSource] = useState<'emoji' | 'upload'>('emoji');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showInsuranceFields, setShowInsuranceFields] = useState(false);
 
   const deviceTypes = [
     'drone',
@@ -415,6 +422,93 @@ const AddDevice: React.FC = () => {
             <option value="NiMH">NiMH</option>
             <option value="Lead-Acid">Lead-Acid</option>
           </select>
+        </div>
+
+        {/* Insurance Information Section */}
+        <div style={{
+          marginTop: '2rem',
+          padding: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 210, 63, 0.1) 100%)',
+          borderRadius: '12px',
+          border: '2px solid rgba(255, 107, 53, 0.3)'
+        }}>
+          <div
+            onClick={() => setShowInsuranceFields(!showInsuranceFields)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              marginBottom: showInsuranceFields ? '1.5rem' : '0'
+            }}
+          >
+            <h3 style={{ margin: 0, color: 'var(--vf-primary)' }}>
+              🛡️ Versicherungsangaben (optional)
+            </h3>
+            <span style={{ fontSize: '1.5rem', transition: 'transform 0.3s', transform: showInsuranceFields ? 'rotate(180deg)' : 'rotate(0)' }}>
+              ▼
+            </span>
+          </div>
+
+          {showInsuranceFields && (
+            <div>
+              <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                Dokumentiere deine Gerätewerte für Versicherungszwecke
+              </p>
+
+              <div className="form-group">
+                <label>Kaufdatum</label>
+                <input
+                  type="date"
+                  value={formData.purchaseDate}
+                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Kaufpreis (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.purchasePrice || ''}
+                  onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  placeholder="999.99"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Aktueller Wert (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.currentValue || ''}
+                  onChange={(e) => setFormData({ ...formData, currentValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  placeholder="799.99"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Seriennummer</label>
+                <input
+                  type="text"
+                  value={formData.serialNumber}
+                  onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                  placeholder="SN123456789"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Garantie bis</label>
+                <input
+                  type="date"
+                  value={formData.warrantyUntil}
+                  onChange={(e) => setFormData({ ...formData, warrantyUntil: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <button type="submit" className="btn-primary">

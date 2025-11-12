@@ -8,6 +8,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../config/firebase';
 import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
+import { DeviceHistory } from '../components/DeviceHistory';
 
 const EditDevice: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +26,14 @@ const EditDevice: React.FC = () => {
     chemistry: 'LiPo',
     dischargeRate: 1.0,
     currentCharge: 100,
-    reminderFrequency: 30
+    health: 100,
+    reminderFrequency: 30,
+    // Insurance fields
+    purchaseDate: '',
+    purchasePrice: undefined as number | undefined,
+    currentValue: undefined as number | undefined,
+    serialNumber: '',
+    warrantyUntil: ''
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -33,6 +41,7 @@ const EditDevice: React.FC = () => {
   const [imageSource, setImageSource] = useState<'emoji' | 'upload'>('emoji');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showInsuranceFields, setShowInsuranceFields] = useState(false);
 
   useEffect(() => {
     if (device) {
@@ -44,7 +53,14 @@ const EditDevice: React.FC = () => {
         chemistry: device.chemistry,
         dischargeRate: device.dischargeRate,
         currentCharge: device.currentCharge,
-        reminderFrequency: device.reminderFrequency
+        health: device.health || 100,
+        reminderFrequency: device.reminderFrequency,
+        // Insurance fields
+        purchaseDate: device.purchaseDate || '',
+        purchasePrice: device.purchasePrice,
+        currentValue: device.currentValue,
+        serialNumber: device.serialNumber || '',
+        warrantyUntil: device.warrantyUntil || ''
       });
       setImageSource(device.imageUrl ? 'upload' : 'emoji');
     }
@@ -196,7 +212,40 @@ const EditDevice: React.FC = () => {
     if (!id) return;
 
     try {
-      await updateDevice(id, formData);
+      // Clean up formData: remove undefined values and empty strings from optional fields
+      const cleanedData: any = {
+        name: formData.name,
+        type: formData.type,
+        chemistry: formData.chemistry,
+        dischargeRate: formData.dischargeRate,
+        currentCharge: formData.currentCharge,
+        health: formData.health,
+        reminderFrequency: formData.reminderFrequency
+      };
+
+      // Add icon or imageUrl
+      if (formData.imageUrl) {
+        cleanedData.imageUrl = formData.imageUrl;
+        cleanedData.icon = '';
+      } else {
+        cleanedData.icon = formData.icon;
+        cleanedData.imageUrl = '';
+      }
+
+      // Add optional insurance fields only if they have values
+      if (formData.purchaseDate) cleanedData.purchaseDate = formData.purchaseDate;
+      if (formData.purchasePrice !== undefined && formData.purchasePrice > 0) {
+        cleanedData.purchasePrice = formData.purchasePrice;
+      }
+      if (formData.currentValue !== undefined && formData.currentValue > 0) {
+        cleanedData.currentValue = formData.currentValue;
+      }
+      if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
+      if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
+
+      console.log('Saving device with data:', cleanedData);
+
+      await updateDevice(id, cleanedData);
       toast.success('Änderungen gespeichert!');
       navigate('/devices');
     } catch (error) {
@@ -449,9 +498,32 @@ const EditDevice: React.FC = () => {
             min="0"
             max="100"
             value={formData.currentCharge}
-            onChange={(e) => setFormData({ ...formData, currentCharge: parseInt(e.target.value) })}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              setFormData({ ...formData, currentCharge: isNaN(value) ? 0 : value });
+            }}
             required
           />
+        </div>
+
+        <div className="form-group">
+          <label>
+            💊 Batteriegesundheit (%)
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={formData.health}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              setFormData({ ...formData, health: isNaN(value) ? 0 : value });
+            }}
+            required
+          />
+          <small style={{ color: '#666', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+            100% = Neu, 80-99% = Gut, 60-79% = Mittel, {'<'}60% = Schwach
+          </small>
         </div>
 
         <div className="form-group">
@@ -476,7 +548,10 @@ const EditDevice: React.FC = () => {
             max="100"
             step="0.1"
             value={formData.dischargeRate}
-            onChange={(e) => setFormData({ ...formData, dischargeRate: parseFloat(e.target.value) })}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value);
+              setFormData({ ...formData, dischargeRate: isNaN(value) ? 0 : value });
+            }}
             required
           />
         </div>
@@ -488,10 +563,108 @@ const EditDevice: React.FC = () => {
             min="1"
             max="365"
             value={formData.reminderFrequency}
-            onChange={(e) => setFormData({ ...formData, reminderFrequency: parseInt(e.target.value) })}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              setFormData({ ...formData, reminderFrequency: isNaN(value) ? 30 : value });
+            }}
             required
           />
         </div>
+
+        {/* Insurance Information Section */}
+        <div style={{
+          marginTop: '2rem',
+          padding: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 210, 63, 0.1) 100%)',
+          borderRadius: '12px',
+          border: '2px solid rgba(255, 107, 53, 0.3)'
+        }}>
+          <div
+            onClick={() => setShowInsuranceFields(!showInsuranceFields)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              marginBottom: showInsuranceFields ? '1.5rem' : '0'
+            }}
+          >
+            <h3 style={{ margin: 0, color: 'var(--vf-primary)' }}>
+              🛡️ Versicherungsangaben (optional)
+            </h3>
+            <span style={{ fontSize: '1.5rem', transition: 'transform 0.3s', transform: showInsuranceFields ? 'rotate(180deg)' : 'rotate(0)' }}>
+              ▼
+            </span>
+          </div>
+
+          {showInsuranceFields && (
+            <div>
+              <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                Dokumentiere deine Gerätewerte für Versicherungszwecke
+              </p>
+
+              <div className="form-group">
+                <label>Kaufdatum</label>
+                <input
+                  type="date"
+                  value={formData.purchaseDate}
+                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Kaufpreis (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.purchasePrice || ''}
+                  onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  placeholder="999.99"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Aktueller Wert (€)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.currentValue || ''}
+                  onChange={(e) => setFormData({ ...formData, currentValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  placeholder="799.99"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Seriennummer</label>
+                <input
+                  type="text"
+                  value={formData.serialNumber}
+                  onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                  placeholder="SN123456789"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Garantie bis</label>
+                <input
+                  type="date"
+                  value={formData.warrantyUntil}
+                  onChange={(e) => setFormData({ ...formData, warrantyUntil: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Device History Section */}
+        {id && device && (
+          <DeviceHistory
+            deviceId={id}
+            deviceName={formData.name}
+          />
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
           <button type="submit" className="btn-primary" style={{ flex: 1 }}>

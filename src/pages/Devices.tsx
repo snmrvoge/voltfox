@@ -1,13 +1,24 @@
 // src/pages/Devices.tsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Battery, Plus, AlertCircle, Edit, ArrowLeft } from 'lucide-react';
+import { Battery, Plus, AlertCircle, Edit, ArrowLeft, Zap } from 'lucide-react';
 import { useDevices } from '../context/DeviceContext';
+import toast from 'react-hot-toast';
 
 const Devices: React.FC = () => {
   const navigate = useNavigate();
-  const { devices, loading } = useDevices();
+  const { devices, loading, updateDevice } = useDevices();
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
+
+  const handleFullyCharged = async (deviceId: string, deviceName: string) => {
+    try {
+      await updateDevice(deviceId, { currentCharge: 100 });
+      toast.success(`✅ ${deviceName} ist jetzt voll aufgeladen!`);
+    } catch (error) {
+      console.error('Error updating charge:', error);
+      toast.error('Fehler beim Aktualisieren');
+    }
+  };
 
   if (loading) {
     return (
@@ -170,28 +181,62 @@ const Devices: React.FC = () => {
                   Low battery!
                 </div>
               )}
-              <Link
-                to={`/edit-device/${device.id}`}
-                className="btn-edit"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginTop: '1rem',
-                  padding: '8px 16px',
-                  background: 'transparent',
-                  border: '2px solid var(--vf-primary)',
-                  color: 'var(--vf-primary)',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  transition: 'all 0.3s'
-                }}
-              >
-                <Edit size={16} />
-                Bearbeiten
-              </Link>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                <button
+                  onClick={() => device.id && handleFullyCharged(device.id, device.name)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 10px rgba(16, 185, 129, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
+                  }}
+                >
+                  <Zap size={14} />
+                  Voll
+                </button>
+                <Link
+                  to={`/edit-device/${device.id}`}
+                  className="btn-edit"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    background: 'transparent',
+                    border: '2px solid var(--vf-primary)',
+                    color: 'var(--vf-primary)',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Edit size={14} />
+                  Edit
+                </Link>
+              </div>
             </div>
           ))}
         </div>

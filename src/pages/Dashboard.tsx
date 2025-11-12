@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Battery, AlertCircle } from 'lucide-react';
+import { Battery, AlertCircle, FileText, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
 import { useNavigate } from 'react-router-dom';
@@ -79,6 +79,27 @@ export default function Dashboard() {
             🦊 {t('dashboard.title')}
           </h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button
+              onClick={() => navigate('/insurance')}
+              style={{
+                padding: '0.5rem 1rem',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                minHeight: '38px'
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.opacity = '0.9')}
+              onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              <FileText size={18} /> Versicherung
+            </button>
             {isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
@@ -90,7 +111,11 @@ export default function Dashboard() {
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
-                  transition: 'background 0.2s'
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  minHeight: '38px'
                 }}
                 onMouseOver={(e) => (e.currentTarget.style.background = '#5568d3')}
                 onMouseOut={(e) => (e.currentTarget.style.background = '#667eea')}
@@ -98,6 +123,27 @@ export default function Dashboard() {
                 🛡️ {t('nav.admin')}
               </button>
             )}
+            <button
+              onClick={() => navigate('/settings')}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#6B7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                minHeight: '38px'
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = '#4B5563')}
+              onMouseOut={(e) => (e.currentTarget.style.background = '#6B7280')}
+            >
+              <Settings size={18} /> {t('nav.settings')}
+            </button>
             <button
               onClick={handleSignOut}
               style={{
@@ -107,8 +153,15 @@ export default function Dashboard() {
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                minHeight: '38px'
               }}
+              onMouseOver={(e) => (e.currentTarget.style.background = '#E85A26')}
+              onMouseOut={(e) => (e.currentTarget.style.background = '#FF6B35')}
             >
               {t('nav.signOut')}
             </button>

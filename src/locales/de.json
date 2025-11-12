@@ -2,12 +2,18 @@
   "common": {
     "appName": "VoltFox",
     "tagline": "Bleib fuchsschlau, bleib geladen",
-    "createdBy": "Erstellt von Mr. Vision"
+    "createdBy": "Erstellt von Mr. Vision",
+    "loading": "Lädt...",
+    "saving": "Speichert...",
+    "save": "Einstellungen speichern",
+    "saved": "✅ Einstellungen gespeichert!",
+    "back": "Zurück"
   },
   "nav": {
     "dashboard": "Dashboard",
     "devices": "Geräte",
     "settings": "Einstellungen",
+    "notifications": "Benachrichtigungen",
     "admin": "Admin",
     "signOut": "Abmelden"
   },
@@ -199,7 +205,9 @@
       "devices": "Geräte",
       "totalRegistered": "Gesamt registriert",
       "average": "Durchschnitt",
-      "devicesPerUser": "Geräte pro Nutzer"
+      "devicesPerUser": "Geräte pro Nutzer",
+      "insuranceValue": "Versicherungswert",
+      "totalInsured": "Gesamtwert versichert"
     },
     "userOverview": "Nutzer-Übersicht",
     "noUsers": "Noch keine Nutzer registriert.",
@@ -207,6 +215,7 @@
       "email": "Email",
       "status": "Status",
       "devices": "Geräte",
+      "insuranceValue": "Versicherungswert",
       "deviceList": "Geräte-Liste",
       "actions": "Aktionen",
       "active": "Aktiv",
@@ -225,5 +234,84 @@
       "userNotFound": "User nicht gefunden!"
     },
     "footer": "Nur Admin-Zugriff"
+  },
+  "notifications": {
+    "settings": {
+      "title": "Benachrichtigungs-Einstellungen",
+      "subtitle": "Verwalten Sie, wie Sie über Batterie-Alarme benachrichtigt werden möchten",
+      "browser": {
+        "title": "Browser-Benachrichtigungen",
+        "description": "Erhalten Sie sofortige Alarme in Ihrem Browser, wenn Batterien Aufmerksamkeit benötigen",
+        "enable": "Browser-Benachrichtigungen aktivieren",
+        "permissionGranted": "✅ Browser-Benachrichtigungen sind aktiviert",
+        "permissionNeeded": "Klicken Sie, um Browser-Benachrichtigungen zu aktivieren"
+      },
+      "email": {
+        "title": "E-Mail-Benachrichtigungen",
+        "description": "Batterie-Alarme per E-Mail erhalten",
+        "enable": "E-Mail-Benachrichtigungen aktivieren"
+      },
+      "types": {
+        "title": "Benachrichtigungstypen",
+        "critical": "Kritische Alarme",
+        "criticalDesc": "Batterie < 20% oder Zustand < 40%",
+        "warning": "Warnungen",
+        "warningDesc": "Batterie < 50% oder Zustand < 70%",
+        "health": "Zustandswarnungen",
+        "healthDesc": "Warnungen bei niedrigem Batteriezustand",
+        "warranty": "Garantie-Ablauf",
+        "warrantyDesc": "Benachrichtigung wenn Garantie abläuft"
+      },
+      "saved": "✅ Benachrichtigungseinstellungen gespeichert!",
+      "saveFailed": "❌ Fehler beim Speichern der Einstellungen",
+      "browserEnabled": "🔔 Browser-Benachrichtigungen aktiviert!",
+      "browserDenied": "❌ Browser-Benachrichtigungen wurden abgelehnt. Bitte aktivieren Sie sie in Ihren Browser-Einstellungen."
+    },
+    "test": {
+      "title": "🦊 VoltFox Test-Benachrichtigung",
+      "body": "Benachrichtigungen funktionieren! Sie werden über Batterieprobleme informiert."
+    }
+  },
+  "insurance": {
+    "title": "Versicherungsdokumentation",
+    "subtitle": "Dokumentation aller Geräte mit Versicherungsinformationen",
+    "backToDashboard": "Zurück zum Dashboard",
+    "print": "Drucken",
+    "download": "Als PDF speichern",
+    "summary": "Zusammenfassung",
+    "deviceCount": "Anzahl Geräte",
+    "totalValue": "Gesamtwert (aktuell)",
+    "deviceList": "Geräteliste",
+    "noDevices": "Keine Geräte mit Versicherungsinformationen gefunden.",
+    "addInfo": "Füge Versicherungsinformationen zu deinen Geräten hinzu, um sie hier zu sehen.",
+    "fields": {
+      "purchaseDate": "Kaufdatum",
+      "purchasePrice": "Kaufpreis",
+      "currentValue": "Aktueller Wert",
+      "serialNumber": "Seriennummer",
+      "warrantyUntil": "Garantie bis",
+      "batteryType": "Batterietyp",
+      "condition": "Aktueller Zustand",
+      "charge": "Ladung",
+      "health": "Gesundheit",
+      "status": "Status"
+    },
+    "form": {
+      "title": "Versicherungsangaben (optional)",
+      "description": "Dokumentiere deine Gerätewerte für Versicherungszwecke",
+      "collapse": "Einklappen",
+      "expand": "Ausklappen"
+    },
+    "status": {
+      "healthy": "Gesund",
+      "warning": "Warnung",
+      "critical": "Kritisch",
+      "dead": "Leer"
+    },
+    "footer": {
+      "generated": "Generiert von VoltFox - Battery Monitoring System",
+      "createdBy": "Erstellt mit ❤️ und ⚡ von Mr. Vision",
+      "website": "www.voltfox.app"
+    }
   }
 }

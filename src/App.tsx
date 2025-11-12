@@ -14,6 +14,8 @@ import Devices from './pages/Devices';
 import AddDevice from './pages/AddDevice';
 import EditDevice from './pages/EditDevice';
 import Settings from './pages/Settings';
+import NotificationSettings from './pages/NotificationSettings';
+import InsuranceReport from './pages/InsuranceReport';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Components
@@ -102,6 +104,18 @@ function App() {
                   <Route path="/settings" element={
                     <ProtectedRoute>
                       <Settings />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/notifications" element={
+                    <ProtectedRoute>
+                      <NotificationSettings />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/insurance" element={
+                    <ProtectedRoute>
+                      <InsuranceReport />
                     </ProtectedRoute>
                   } />
 

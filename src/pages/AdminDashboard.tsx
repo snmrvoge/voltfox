@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { ArrowLeft, Users, Battery, TrendingUp, Activity } from 'lucide-react';
+import { ArrowLeft, Users, Battery, TrendingUp, Activity, Shield } from 'lucide-react';
 
 interface UserStats {
   uid: string;
@@ -14,6 +14,9 @@ interface UserStats {
   devices: any[];
   isBlocked?: boolean;
   blockedAt?: string;
+  insuranceValue: number;
+  currency: string;
+  plan: 'free' | 'pro' | 'business';
 }
 
 const AdminDashboard: React.FC = () => {
@@ -23,6 +26,7 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [totalDevices, setTotalDevices] = useState(0);
+  const [totalInsuranceValue, setTotalInsuranceValue] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -86,10 +90,12 @@ const AdminDashboard: React.FC = () => {
 
       const stats: UserStats[] = [];
       let deviceTotal = 0;
+      let insuranceTotal = 0;
 
       for (const userDoc of usersSnapshot.docs) {
         const userData = userDoc.data();
         const userId = userDoc.id;
+        const userCurrency = userData.currency || 'EUR';
 
         console.log(`Loading devices for user: ${userId} (${userData.email})`);
 
@@ -107,13 +113,24 @@ const AdminDashboard: React.FC = () => {
 
           deviceTotal += devices.length;
 
+          // Calculate insurance value for this user
+          const userInsuranceValue = devices.reduce((total: number, device: any) => {
+            const value = device.currentValue || device.purchasePrice || 0;
+            return total + value;
+          }, 0);
+
+          insuranceTotal += userInsuranceValue;
+
           stats.push({
             uid: userId,
             email: userData.email || 'Unknown',
             deviceCount: devices.length,
             devices,
             isBlocked: userData.isBlocked || false,
-            blockedAt: userData.blockedAt
+            blockedAt: userData.blockedAt,
+            insuranceValue: userInsuranceValue,
+            currency: userCurrency,
+            plan: userData.plan || 'free'
           });
         } catch (deviceError) {
           console.error(`Error loading devices for user ${userId}:`, deviceError);
@@ -122,18 +139,23 @@ const AdminDashboard: React.FC = () => {
             uid: userId,
             email: userData.email || 'Unknown',
             deviceCount: 0,
-            devices: []
+            devices: [],
+            insuranceValue: 0,
+            currency: userCurrency,
+            plan: userData.plan || 'free'
           });
         }
       }
 
       console.log(`Total devices found: ${deviceTotal}`);
+      console.log(`Total insurance value: ${insuranceTotal}`);
 
       // Sort by device count
       stats.sort((a, b) => b.deviceCount - a.deviceCount);
 
       setUserStats(stats);
       setTotalDevices(deviceTotal);
+      setTotalInsuranceValue(insuranceTotal);
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
@@ -209,6 +231,16 @@ const AdminDashboard: React.FC = () => {
   const avgDevicesPerUser = userStats.length > 0
     ? (totalDevices / userStats.length).toFixed(1)
     : '0';
+
+  // Helper function to format currency
+  const formatCurrency = (value: number, currencyCode: string = 'EUR') => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
 
   return (
     <div style={{
@@ -316,6 +348,24 @@ const AdminDashboard: React.FC = () => {
             </p>
             <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('admin.stats.devicesPerUser')}</p>
           </div>
+
+          {/* Total Insurance Value */}
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '15px',
+            borderLeft: '4px solid #8B5CF6',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+              <Shield size={24} color="#8B5CF6" />
+              <h3 style={{ color: '#2E3A4B', margin: 0 }}>{t('admin.stats.insuranceValue')}</h3>
+            </div>
+            <p style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#8B5CF6', margin: '0.5rem 0' }}>
+              {formatCurrency(totalInsuranceValue)}
+            </p>
+            <p style={{ color: '#666', fontSize: '0.9rem' }}>{t('admin.stats.totalInsured')}</p>
+          </div>
         </div>
 
         {/* User List */}
@@ -343,8 +393,10 @@ const AdminDashboard: React.FC = () => {
                     textAlign: 'left'
                   }}>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.email')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Plan</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.status')}</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.devices')}</th>
+                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.insuranceValue')}</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.deviceList')}</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.actions')}</th>
                   </tr>
@@ -376,6 +428,20 @@ const AdminDashboard: React.FC = () => {
                         <span style={{
                           display: 'inline-block',
                           padding: '0.25rem 0.75rem',
+                          background: user.plan === 'business' ? '#FEF3C7' : user.plan === 'pro' ? '#DBEAFE' : '#F3F4F6',
+                          color: user.plan === 'business' ? '#92400E' : user.plan === 'pro' ? '#1E40AF' : '#6B7280',
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          textTransform: 'uppercase'
+                        }}>
+                          {user.plan === 'business' ? '💼 Business' : user.plan === 'pro' ? '⭐ Pro' : '🆓 Free'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
                           background: user.isBlocked ? '#FEE2E2' : '#D1FAE5',
                           color: user.isBlocked ? '#991B1B' : '#065F46',
                           borderRadius: '12px',
@@ -396,6 +462,19 @@ const AdminDashboard: React.FC = () => {
                           fontSize: '0.9rem'
                         }}>
                           {user.deviceCount}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
+                          background: user.insuranceValue > 0 ? '#EDE9FE' : '#F3F4F6',
+                          color: user.insuranceValue > 0 ? '#5B21B6' : '#6B7280',
+                          borderRadius: '12px',
+                          fontWeight: 600,
+                          fontSize: '0.9rem'
+                        }}>
+                          {user.insuranceValue > 0 ? formatCurrency(user.insuranceValue, user.currency) : '-'}
                         </span>
                       </td>
                       <td style={{ padding: '1rem' }}>

@@ -115,8 +115,8 @@ const Landing: React.FC = () => {
                 {t('landing.hero.startMonitoring')}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
-              <Link to="/demo" className="btn btn-secondary btn-large">
-                {t('landing.hero.watchDemo')}
+              <Link to="/login" className="btn btn-secondary btn-large">
+                {t('auth.login.submit')}
               </Link>
             </div>
             

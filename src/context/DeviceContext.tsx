@@ -14,6 +14,8 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import { NotificationService } from '../services/NotificationService';
+import { HistoryService } from '../services/HistoryService';
 
 interface Device {
   id?: string;
@@ -36,6 +38,14 @@ interface Device {
   photoUrl?: string;
   notes?: string;
   reminderFrequency: number;
+  temperature?: number;
+  // Insurance-related fields
+  purchaseDate?: string;
+  purchasePrice?: number;
+  currentValue?: number;
+  serialNumber?: string;
+  warrantyUntil?: string;
+  receiptUrls?: string[];
   createdAt?: any;
   updatedAt?: any;
 }
@@ -48,6 +58,7 @@ interface DeviceContextType {
   deleteDevice: (id: string) => Promise<void>;
   checkBatteryHealth: (device: Device) => number;
   getDaysUntilDanger: (device: Device) => number;
+  calculateDeviceStatus: (device: Device) => 'healthy' | 'warning' | 'critical' | 'dead';
 }
 
 const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
@@ -85,11 +96,50 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
 
       const unsubscribe = onSnapshot(
         devicesQuery,
-        (snapshot) => {
+        async (snapshot) => {
           const devicesList: Device[] = [];
           snapshot.forEach((doc) => {
             devicesList.push({ id: doc.id, ...doc.data() } as Device);
           });
+
+          // Auto-update device status if needed
+          for (const device of devicesList) {
+            const calculatedStatus = calculateDeviceStatus(device);
+            const previousStatus = device.status;
+
+            if (previousStatus !== calculatedStatus) {
+              // Update status in Firestore
+              try {
+                await updateDoc(
+                  doc(db, 'users', currentUser.uid, 'devices', device.id!),
+                  { status: calculatedStatus }
+                );
+                device.status = calculatedStatus;
+
+                // Send notifications based on new status
+                if (NotificationService.isEnabled()) {
+                  if (calculatedStatus === 'dead') {
+                    NotificationService.sendDeviceDeadAlert(device.name);
+                  } else if (calculatedStatus === 'critical' && previousStatus !== 'critical') {
+                    if (device.currentCharge < 20) {
+                      NotificationService.sendCriticalBatteryAlert(device.name, device.currentCharge);
+                    } else if (device.health < 40) {
+                      NotificationService.sendLowHealthWarning(device.name, device.health);
+                    }
+                  } else if (calculatedStatus === 'warning' && previousStatus === 'healthy') {
+                    if (device.currentCharge < 50) {
+                      NotificationService.sendLowBatteryWarning(device.name, device.currentCharge);
+                    } else if (device.health < 70) {
+                      NotificationService.sendLowHealthWarning(device.name, device.health);
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Error updating device status:', error);
+              }
+            }
+          }
+
           setDevices(devicesList);
           setLoading(false);
         },
@@ -145,6 +195,20 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
     if (!currentUser) return;
 
     try {
+      // Get the current device data to calculate status
+      const device = devices.find(d => d.id === id);
+
+      // Calculate the new status based on updated values
+      let newStatus = updates.status;
+      if (device && (updates.currentCharge !== undefined || updates.health !== undefined)) {
+        const updatedDevice = {
+          ...device,
+          ...updates
+        } as Device;
+        newStatus = calculateDeviceStatus(updatedDevice);
+        updates.status = newStatus;
+      }
+
       await updateDoc(
         doc(db, 'users', currentUser.uid, 'devices', id),
         {
@@ -153,10 +217,42 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
         }
       );
 
-      toast.success('Device updated!');
+      // Always record snapshot for history tracking when charge or health changes
+      if (updates.currentCharge !== undefined || updates.health !== undefined) {
+        try {
+          if (device) {
+            const snapshotData: any = {
+              currentCharge: updates.currentCharge ?? device.currentCharge,
+              health: updates.health ?? device.health,
+              status: newStatus ?? device.status
+            };
+
+            // Only add optional fields if they are defined
+            const voltage = updates.voltage ?? device.voltage;
+            if (voltage !== undefined) {
+              snapshotData.voltage = voltage;
+            }
+
+            const temperature = device.temperature;
+            if (temperature !== undefined) {
+              snapshotData.temperature = temperature;
+            }
+
+            console.log('Recording history snapshot:', snapshotData);
+
+            await HistoryService.recordSnapshot(currentUser.uid, id, snapshotData);
+
+            console.log('History snapshot recorded successfully');
+          }
+        } catch (historyError) {
+          console.error('Error recording history snapshot:', historyError);
+          // Don't fail the update if history recording fails
+        }
+      }
+
+      // Don't show toast here - let the calling component handle it
     } catch (error) {
       console.error('Error updating device:', error);
-      toast.error('Failed to update device');
       throw error;
     }
   }
@@ -203,9 +299,33 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
     const lastCharged = new Date(device.lastCharged);
     const daysSinceCharge = (Date.now() - lastCharged.getTime()) / (1000 * 60 * 60 * 24);
     const currentCharge = Math.max(0, device.currentCharge - (daysSinceCharge * device.dischargeRate));
-    
+
     const daysRemaining = currentCharge / device.dischargeRate;
     return Math.max(0, Math.round(daysRemaining));
+  }
+
+  // Calculate device status based on charge and health
+  function calculateDeviceStatus(device: Device): 'healthy' | 'warning' | 'critical' | 'dead' {
+    const charge = device.currentCharge;
+    const health = device.health;
+
+    // Dead: no charge or no health
+    if (charge === 0 || health === 0) {
+      return 'dead';
+    }
+
+    // Critical: very low charge or very low health
+    if (charge < 20 || health < 40) {
+      return 'critical';
+    }
+
+    // Warning: medium charge or medium health
+    if (charge < 50 || health < 70) {
+      return 'warning';
+    }
+
+    // Healthy: good charge and health
+    return 'healthy';
   }
 
   const value = {
@@ -215,7 +335,8 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
     updateDevice,
     deleteDevice,
     checkBatteryHealth,
-    getDaysUntilDanger
+    getDaysUntilDanger,
+    calculateDeviceStatus
   };
 
   return (
