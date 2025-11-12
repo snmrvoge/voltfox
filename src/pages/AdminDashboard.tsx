@@ -29,6 +29,10 @@ const AdminDashboard: React.FC = () => {
   const [totalDevices, setTotalDevices] = useState(0);
   const [totalInsuranceValue, setTotalInsuranceValue] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'email' | 'createdAt' | 'plan' | 'devices' | 'insuranceValue'>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const usersPerPage = 10;
 
   useEffect(() => {
     // Check if user is admin via Firestore
@@ -153,9 +157,6 @@ const AdminDashboard: React.FC = () => {
       console.log(`Total devices found: ${deviceTotal}`);
       console.log(`Total insurance value: ${insuranceTotal}`);
 
-      // Sort by device count
-      stats.sort((a, b) => b.deviceCount - a.deviceCount);
-
       setUserStats(stats);
       setTotalDevices(deviceTotal);
       setTotalInsuranceValue(insuranceTotal);
@@ -165,6 +166,62 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Sorting function
+  const handleSort = (column: typeof sortBy) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('desc');
+    }
+    setCurrentPage(1); // Reset to first page on sort
+  };
+
+  // Sort users based on current sort settings
+  const sortedUsers = [...userStats].sort((a, b) => {
+    let aVal: any;
+    let bVal: any;
+
+    switch (sortBy) {
+      case 'email':
+        aVal = a.email.toLowerCase();
+        bVal = b.email.toLowerCase();
+        break;
+      case 'createdAt':
+        aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        break;
+      case 'plan':
+        const planOrder = { business: 3, pro: 2, free: 1 };
+        aVal = planOrder[a.plan];
+        bVal = planOrder[b.plan];
+        break;
+      case 'devices':
+        aVal = a.deviceCount;
+        bVal = b.deviceCount;
+        break;
+      case 'insuranceValue':
+        aVal = a.insuranceValue;
+        bVal = b.insuranceValue;
+        break;
+      default:
+        aVal = a.email;
+        bVal = b.email;
+    }
+
+    if (sortDirection === 'asc') {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = sortedUsers.slice(startIndex, endIndex);
 
   const toggleBlockUser = async (userId: string, currentlyBlocked: boolean) => {
     if (!currentUser) return;
@@ -408,18 +465,43 @@ const AdminDashboard: React.FC = () => {
                     borderBottom: '2px solid #E5E7EB',
                     textAlign: 'left'
                   }}>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.email')}</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Registriert</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Plan</th>
+                    <th
+                      onClick={() => handleSort('email')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      {t('admin.table.email')} {sortBy === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      onClick={() => handleSort('createdAt')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      Registriert {sortBy === 'createdAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      onClick={() => handleSort('plan')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      Plan {sortBy === 'plan' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.status')}</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.devices')}</th>
-                    <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.insuranceValue')}</th>
+                    <th
+                      onClick={() => handleSort('devices')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      {t('admin.table.devices')} {sortBy === 'devices' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      onClick={() => handleSort('insuranceValue')}
+                      style={{ padding: '1rem', color: '#666', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      {t('admin.table.insuranceValue')} {sortBy === 'insuranceValue' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.deviceList')}</th>
                     <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>{t('admin.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {userStats.map((user, index) => (
+                  {currentUsers.map((user, index) => (
                     <tr
                       key={user.uid}
                       style={{
@@ -541,6 +623,91 @@ const AdminDashboard: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '2rem',
+                  padding: '1rem',
+                  background: '#F9FAFB',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{ color: '#666', fontSize: '0.9rem' }}>
+                    Zeige {startIndex + 1}-{Math.min(endIndex, sortedUsers.length)} von {sortedUsers.length} Benutzern
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: currentPage === 1 ? '#E5E7EB' : '#FF6B35',
+                        color: currentPage === 1 ? '#9CA3AF' : 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: 600,
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      ← Zurück
+                    </button>
+
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            background: page === currentPage ? '#FF6B35' : 'white',
+                            color: page === currentPage ? 'white' : '#666',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            minWidth: '40px'
+                          }}
+                          onMouseOver={(e) => {
+                            if (page !== currentPage) {
+                              e.currentTarget.style.background = '#F3F4F6';
+                            }
+                          }}
+                          onMouseOut={(e) => {
+                            if (page !== currentPage) {
+                              e.currentTarget.style.background = 'white';
+                            }
+                          }}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: currentPage === totalPages ? '#E5E7EB' : '#FF6B35',
+                        color: currentPage === totalPages ? '#9CA3AF' : 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: 600,
+                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Weiter →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
