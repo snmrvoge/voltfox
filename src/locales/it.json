@@ -168,6 +168,12 @@
     "loggedInAs": "Connesso come:",
     "addFirstDevice": "Aggiungi il tuo primo dispositivo",
     "addDevice": "Aggiungi dispositivo",
+    "greetings": {
+      "morning": "Buongiorno",
+      "afternoon": "Buon pomeriggio",
+      "evening": "Buonasera",
+      "night": "Buonanotte"
+    },
     "stats": {
       "devices": "Dispositivi",
       "healthy": "sani",

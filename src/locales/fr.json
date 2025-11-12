@@ -168,6 +168,12 @@
     "loggedInAs": "Connecté en tant que:",
     "addFirstDevice": "Ajoutez votre premier appareil",
     "addDevice": "Ajouter un appareil",
+    "greetings": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir",
+      "night": "Bonne nuit"
+    },
     "stats": {
       "devices": "Appareils",
       "healthy": "sains",

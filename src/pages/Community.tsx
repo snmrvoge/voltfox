@@ -1,11 +1,12 @@
 // src/pages/Community.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, TrendingUp, Award, Battery, AlertCircle, Plus, X } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, Award, Battery, AlertCircle, Plus, X, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../context/DeviceContext';
 import { doc, getDoc, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db, storage } from '../config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
 
 interface CommunityDevice {
@@ -16,6 +17,8 @@ interface CommunityDevice {
   userCount: number;
   totalHealthSum: number;
   avgHealth: number;
+  imageUrl?: string;
+  icon?: string;
   createdAt: string;
 }
 
@@ -27,8 +30,16 @@ const Community: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
-  const [newDevice, setNewDevice] = useState({ type: '', brand: '', model: '' });
+  const [newDevice, setNewDevice] = useState({ type: '', brand: '', model: '', imageUrl: '', icon: '🔋' });
   const [addingDevice, setAddingDevice] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [imageSource, setImageSource] = useState<'emoji' | 'upload'>('emoji');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const communityIcons = [
+    '🔋', '⚡', '🔌', '📱', '💻', '🎧', '📷', '🎮',
+    '⌚', '🚁', '🚲', '🏎️', '🚗', '🔊', '🎵', '💡', '🔦', '⏰'
+  ];
 
   // Load user's community settings
   useEffect(() => {
@@ -80,6 +91,47 @@ const Community: React.FC = () => {
     loadCommunityDevices();
   }, [hasOptedIn]);
 
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) {
+      if (!file) toast.error('Keine Datei ausgewählt');
+      if (!currentUser) toast.error('Bitte erst anmelden');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Bild darf maximal 5MB groß sein');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Bitte nur Bilddateien hochladen');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const storagePath = `communityDevices/${fileName}`;
+
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+
+      setNewDevice({ ...newDevice, imageUrl: url, icon: '' });
+      setImageSource('upload');
+      setUploadedFile(file);
+      toast.success('Bild erfolgreich hochgeladen!');
+    } catch (error: any) {
+      console.error('Upload Fehler:', error);
+      toast.error('Fehler beim Hochladen');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Function to add a new community device
   const handleAddDevice = async () => {
     if (!newDevice.type || !newDevice.brand || !newDevice.model) {
@@ -89,7 +141,16 @@ const Community: React.FC = () => {
 
     setAddingDevice(true);
     try {
-      await addDoc(collection(db, 'communityDevices'), {
+      let imageUrl = '';
+
+      // Upload image if file is selected
+      if (uploadedFile) {
+        const imageRef = ref(storage, `communityDevices/${Date.now()}_${uploadedFile.name}`);
+        await uploadBytes(imageRef, uploadedFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      const deviceData: any = {
         type: newDevice.type,
         brand: newDevice.brand,
         model: newDevice.model,
@@ -97,11 +158,24 @@ const Community: React.FC = () => {
         totalHealthSum: 0,
         avgHealth: 0,
         createdAt: new Date().toISOString()
-      });
+      };
+
+      // Add image or icon
+      if (imageUrl) {
+        deviceData.imageUrl = imageUrl;
+        deviceData.icon = '';
+      } else {
+        deviceData.icon = newDevice.icon || '🔋';
+        deviceData.imageUrl = '';
+      }
+
+      await addDoc(collection(db, 'communityDevices'), deviceData);
 
       toast.success('Gerät zur Community-Datenbank hinzugefügt!');
       setShowAddDeviceModal(false);
-      setNewDevice({ type: '', brand: '', model: '' });
+      setNewDevice({ type: '', brand: '', model: '', imageUrl: '', icon: '🔋' });
+      setUploadedFile(null);
+      setImageSource('emoji');
 
       // Reload devices
       const devicesQuery = query(collection(db, 'communityDevices'), orderBy('avgHealth', 'desc'));
@@ -664,6 +738,132 @@ const Community: React.FC = () => {
               <p style={{ color: '#666', marginBottom: '1.5rem' }}>
                 Füge ein neues Gerät zur Community-Datenbank hinzu. Andere User können es dann mit ihren Geräten verknüpfen.
               </p>
+
+              {/* Image Selection */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: '500' }}>
+                  Referenzbild / Icon
+                </label>
+
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageSource('emoji');
+                      setNewDevice({ ...newDevice, imageUrl: '', icon: newDevice.icon || '🔋' });
+                    }}
+                    disabled={addingDevice}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: imageSource === 'emoji' ? 'var(--vf-primary)' : 'transparent',
+                      color: imageSource === 'emoji' ? 'white' : 'var(--vf-primary)',
+                      border: '2px solid var(--vf-primary)',
+                      borderRadius: '8px',
+                      cursor: addingDevice ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      opacity: addingDevice ? 0.5 : 1
+                    }}
+                  >
+                    Community Icons
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageSource('upload')}
+                    disabled={addingDevice}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: imageSource === 'upload' ? 'var(--vf-primary)' : 'transparent',
+                      color: imageSource === 'upload' ? 'white' : 'var(--vf-primary)',
+                      border: '2px solid var(--vf-primary)',
+                      borderRadius: '8px',
+                      cursor: addingDevice ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      opacity: addingDevice ? 0.5 : 1
+                    }}
+                  >
+                    <Upload size={16} />
+                    Eigenes Bild
+                  </button>
+                </div>
+
+                {imageSource === 'emoji' ? (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gap: '0.5rem',
+                    padding: '1rem',
+                    background: '#f5f5f5',
+                    borderRadius: '8px'
+                  }}>
+                    {communityIcons.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setNewDevice({ ...newDevice, icon: emoji, imageUrl: '' })}
+                        disabled={addingDevice}
+                        style={{
+                          fontSize: '2rem',
+                          padding: '0.5rem',
+                          background: newDevice.icon === emoji ? 'var(--vf-primary)' : 'white',
+                          border: '2px solid',
+                          borderColor: newDevice.icon === emoji ? 'var(--vf-primary)' : '#ddd',
+                          borderRadius: '8px',
+                          cursor: addingDevice ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.2s',
+                          opacity: addingDevice ? 0.5 : 1
+                        }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    {newDevice.imageUrl && (
+                      <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                        <img
+                          src={newDevice.imageUrl}
+                          alt="Device"
+                          style={{
+                            maxWidth: '200px',
+                            maxHeight: '200px',
+                            borderRadius: '8px',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      </div>
+                    )}
+                    <label
+                      style={{
+                        display: 'block',
+                        padding: '2rem',
+                        background: '#f5f5f5',
+                        border: '2px dashed var(--vf-primary)',
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        cursor: uploadingImage || addingDevice ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.3s',
+                        opacity: uploadingImage || addingDevice ? 0.5 : 1
+                      }}
+                    >
+                      <Upload size={32} style={{ margin: '0 auto 1rem' }} />
+                      <p style={{ color: 'var(--vf-primary)', fontWeight: 600, margin: 0 }}>
+                        {uploadingImage ? 'Wird hochgeladen...' : 'Bild hochladen (max. 5MB)'}
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage || addingDevice}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
 
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: '500' }}>

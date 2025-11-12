@@ -24,13 +24,13 @@ export default function Dashboard() {
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return 'Guten Morgen';
+      return t('dashboard.greetings.morning');
     } else if (hour >= 12 && hour < 18) {
-      return 'Schönen Nachmittag';
+      return t('dashboard.greetings.afternoon');
     } else if (hour >= 18 && hour < 22) {
-      return 'Guten Abend';
+      return t('dashboard.greetings.evening');
     } else {
-      return 'Gute Nacht';
+      return t('dashboard.greetings.night');
     }
   };
 

@@ -1,13 +1,27 @@
 // src/pages/AddDevice.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Battery, ArrowLeft, Upload, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Battery, ArrowLeft, Upload, Image as ImageIcon, Sparkles, Search } from 'lucide-react';
 import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../config/firebase';
+import { storage, db } from '../config/firebase';
+import { collection, getDocs, query, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
+
+interface CommunityDevice {
+  id: string;
+  type: string;
+  brand: string;
+  model: string;
+  userCount: number;
+  totalHealthSum: number;
+  avgHealth: number;
+  imageUrl?: string;
+  icon?: string;
+  createdAt: string;
+}
 
 const AddDevice: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +30,8 @@ const AddDevice: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    brand: '',
+    model: '',
     type: 'drone',
     icon: '🔋',
     imageUrl: '',
@@ -41,6 +57,13 @@ const AddDevice: React.FC = () => {
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
 
+  // Community device linking
+  const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
+  const [selectedCommunityDevice, setSelectedCommunityDevice] = useState<CommunityDevice | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCommunitySearch, setShowCommunitySearch] = useState(false);
+  const [hasOptedIn, setHasOptedIn] = useState(false);
+
   const deviceTypes = [
     'drone',
     'camera',
@@ -59,6 +82,45 @@ const AddDevice: React.FC = () => {
     '🔋', '⚡', '🔌', '📱', '💻', '🎧', '📷', '🎮',
     '⌚', '🚁', '🚲', '🏎️', '🚗', '🔊', '🎵', '💡', '🔦', '⏰'
   ];
+
+  // Load community settings
+  useEffect(() => {
+    const loadCommunitySettings = async () => {
+      if (!currentUser) return;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setHasOptedIn(data?.communitySettings?.shareDataWithCommunity || false);
+        }
+      } catch (error) {
+        console.error('Error loading community settings:', error);
+      }
+    };
+    loadCommunitySettings();
+  }, [currentUser]);
+
+  // Load community devices
+  useEffect(() => {
+    const loadCommunityDevices = async () => {
+      if (!hasOptedIn) return;
+      try {
+        const devicesQuery = query(collection(db, 'communityDevices'));
+        const querySnapshot = await getDocs(devicesQuery);
+        const devices: CommunityDevice[] = [];
+        querySnapshot.forEach((doc) => {
+          devices.push({
+            id: doc.id,
+            ...doc.data()
+          } as CommunityDevice);
+        });
+        setCommunityDevices(devices);
+      } catch (error) {
+        console.error('Error loading community devices:', error);
+      }
+    };
+    loadCommunityDevices();
+  }, [hasOptedIn]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -180,6 +242,8 @@ const AddDevice: React.FC = () => {
       // Clean up formData: only include filled fields
       const cleanedData: any = {
         name: formData.name,
+        brand: formData.brand || '',
+        model: formData.model || '',
         type: formData.type,
         chemistry: formData.chemistry,
         dischargeRate: formData.dischargeRate,
@@ -210,8 +274,31 @@ const AddDevice: React.FC = () => {
       if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
       if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
 
+      // Add community device reference if linked
+      if (selectedCommunityDevice && hasOptedIn) {
+        cleanedData.communityDeviceId = selectedCommunityDevice.id;
+      }
+
       await addDevice(cleanedData);
-      toast.success('Gerät hinzugefügt!');
+
+      // Update community device statistics if linked and opted in
+      if (selectedCommunityDevice && hasOptedIn) {
+        try {
+          const communityDeviceRef = doc(db, 'communityDevices', selectedCommunityDevice.id);
+          await updateDoc(communityDeviceRef, {
+            userCount: increment(1),
+            totalHealthSum: increment(formData.health),
+            avgHealth: Math.round((selectedCommunityDevice.totalHealthSum + formData.health) / (selectedCommunityDevice.userCount + 1))
+          });
+          toast.success('Gerät hinzugefügt und mit Community verknüpft!');
+        } catch (error) {
+          console.error('Error updating community device stats:', error);
+          toast.success('Gerät hinzugefügt!');
+        }
+      } else {
+        toast.success('Gerät hinzugefügt!');
+      }
+
       navigate('/devices');
     } catch (error) {
       console.error('Error adding device:', error);
@@ -260,6 +347,245 @@ const AddDevice: React.FC = () => {
             required
           />
         </div>
+
+        <div className="form-group">
+          <label>Brand / Hersteller</label>
+          <input
+            type="text"
+            value={formData.brand}
+            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+            placeholder="DJI, Apple, Bosch..."
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Model / Modell</label>
+          <input
+            type="text"
+            value={formData.model}
+            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+            placeholder="Mavic 3, iPhone 15 Pro..."
+          />
+        </div>
+
+        {/* Community Device Search */}
+        {hasOptedIn && (
+          <div style={{
+            marginBottom: '1.5rem',
+            padding: '1.5rem',
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+            borderRadius: '12px',
+            border: '2px solid rgba(102, 126, 234, 0.3)'
+          }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#2E3A4B', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Search size={20} color="#667eea" />
+                Community-Gerät verknüpfen (optional)
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>
+                Suche nach deinem Gerät in der Community-Datenbank und nutze das Referenzbild
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowCommunitySearch(!showCommunitySearch)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: showCommunitySearch ? '#667eea' : 'white',
+                color: showCommunitySearch ? 'white' : '#667eea',
+                border: '2px solid #667eea',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s',
+                marginBottom: showCommunitySearch ? '1rem' : '0'
+              }}
+            >
+              {showCommunitySearch ? 'Suche schließen' : 'Community-Geräte durchsuchen'}
+            </button>
+
+            {showCommunitySearch && (
+              <div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Suche nach Marke, Modell oder Typ..."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    marginBottom: '1rem'
+                  }}
+                />
+
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  {communityDevices
+                    .filter(d =>
+                      !searchQuery ||
+                      d.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      d.type.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .slice(0, 10)
+                    .map((device) => (
+                      <div
+                        key={device.id}
+                        onClick={() => {
+                          setSelectedCommunityDevice(device);
+                          setFormData({
+                            ...formData,
+                            brand: device.brand,
+                            model: device.model,
+                            type: device.type,
+                            imageUrl: device.imageUrl || '',
+                            icon: device.icon || formData.icon
+                          });
+                          setShowCommunitySearch(false);
+                          toast.success(`Mit ${device.brand} ${device.model} verknüpft!`);
+                        }}
+                        style={{
+                          padding: '1rem',
+                          background: selectedCommunityDevice?.id === device.id ? '#F3F4F6' : 'white',
+                          border: selectedCommunityDevice?.id === device.id ? '2px solid #667eea' : '1px solid #E5E7EB',
+                          borderRadius: '8px',
+                          marginBottom: '0.5rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem'
+                        }}
+                        onMouseOver={(e) => {
+                          if (selectedCommunityDevice?.id !== device.id) {
+                            e.currentTarget.style.background = '#F9FAFB';
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          if (selectedCommunityDevice?.id !== device.id) {
+                            e.currentTarget.style.background = 'white';
+                          }
+                        }}
+                      >
+                        {device.imageUrl ? (
+                          <img
+                            src={device.imageUrl}
+                            alt={`${device.brand} ${device.model}`}
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              borderRadius: '8px',
+                              objectFit: 'cover'
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '50px',
+                            height: '50px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '2rem'
+                          }}>
+                            {device.icon || '🔋'}
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#2E3A4B' }}>
+                            {device.brand} {device.model}
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                            {device.type} • {device.userCount} Nutzer • Ø {device.avgHealth}% Gesundheit
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  {communityDevices.filter(d =>
+                    !searchQuery ||
+                    d.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    d.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    d.type.toLowerCase().includes(searchQuery.toLowerCase())
+                  ).length === 0 && (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                      Keine passenden Geräte gefunden. Du kannst das Gerät später in der Community-Seite hinzufügen.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {selectedCommunityDevice && !showCommunitySearch && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '1rem',
+                background: 'white',
+                borderRadius: '8px',
+                border: '2px solid #667eea',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                {selectedCommunityDevice.imageUrl ? (
+                  <img
+                    src={selectedCommunityDevice.imageUrl}
+                    alt={`${selectedCommunityDevice.brand} ${selectedCommunityDevice.model}`}
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '8px',
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '50px',
+                    height: '50px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2rem'
+                  }}>
+                    {selectedCommunityDevice.icon || '🔋'}
+                  </div>
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, color: '#2E3A4B' }}>
+                    Verknüpft mit: {selectedCommunityDevice.brand} {selectedCommunityDevice.model}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                    Deine Daten werden zur Community-Statistik beitragen
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCommunityDevice(null);
+                    toast.success('Verknüpfung entfernt');
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#EF4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Entfernen
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="form-group">
           <label>Device Type</label>

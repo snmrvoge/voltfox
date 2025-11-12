@@ -168,6 +168,12 @@
     "loggedInAs": "Angemeldet als:",
     "addFirstDevice": "Füge dein erstes Gerät hinzu",
     "addDevice": "Gerät hinzufügen",
+    "greetings": {
+      "morning": "Guten Morgen",
+      "afternoon": "Schönen Nachmittag",
+      "evening": "Guten Abend",
+      "night": "Gute Nacht"
+    },
     "stats": {
       "devices": "Geräte",
       "healthy": "gesund",
