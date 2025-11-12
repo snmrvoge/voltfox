@@ -20,7 +20,7 @@
   "landing": {
     "hero": {
       "title": "Verliere nie wieder ein Gerät durch leere Batterien",
-      "description": "Der schlaue Fuchs überwacht deine Batterien 24/7 mit KI-gestützten Vorhersagen und sofortigen Alarmen. Schließe dich 50.000+ Nutzern an, die sich nie wieder um leere Batterien sorgen.",
+      "description": "Der schlaue Fuchs überwacht deine wiederaufladbaren Batterien 24/7 mit KI-gestützten Vorhersagen und sofortigen Alarmen. Schließe dich 50.000+ Nutzern an, die sich nie wieder um leere Batterien sorgen.",
       "startMonitoring": "Kostenlos starten",
       "watchDemo": "Demo ansehen"
     },
@@ -193,7 +193,26 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "confirmDelete": "Bist du sicher, dass du dieses Gerät löschen möchtest?",
-    "lowBattery": "Niedriger Ladestand!"
+    "lowBattery": "Niedriger Ladestand!",
+    "chargedWithoutUse": "Aufgeladen ohne Benutzung",
+    "markDefective": "Tiefentladen / Defekt",
+    "confirmChargedWithoutUse": "Gerät wurde aufgeladen aber nicht benutzt?",
+    "confirmMarkDefective": "Gerät als tiefentladen oder defekt markieren?",
+    "markedAsChargedWithoutUse": "✅ Als aufgeladen ohne Benutzung markiert",
+    "markedAsDefective": "⚠️ Als defekt markiert",
+    "types": {
+      "drone": "Drohne",
+      "camera": "Kamera",
+      "laptop": "Laptop",
+      "phone": "Smartphone",
+      "tablet": "Tablet",
+      "smartwatch": "Smartwatch",
+      "headphones": "Kopfhörer",
+      "speaker": "Lautsprecher",
+      "e-bike": "E-Bike",
+      "rc-car": "RC Fahrzeug",
+      "other": "Andere"
+    }
   },
   "admin": {
     "title": "Admin Dashboard",

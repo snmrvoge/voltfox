@@ -20,7 +20,7 @@
   "landing": {
     "hero": {
       "title": "Ne perdez plus jamais un appareil à cause de batteries déchargées",
-      "description": "Le renard intelligent surveille vos batteries 24h/24 et 7j/7 avec des prévisions alimentées par l'IA et des alertes instantanées. Rejoignez 50 000+ utilisateurs qui ne s'inquiètent plus jamais des batteries déchargées.",
+      "description": "Le renard intelligent surveille vos batteries rechargeables 24h/24 et 7j/7 avec des prévisions alimentées par l'IA et des alertes instantanées. Rejoignez 50 000+ utilisateurs qui ne s'inquiètent plus jamais des batteries déchargées.",
       "startMonitoring": "Commencer gratuitement",
       "watchDemo": "Voir la démo"
     },
@@ -193,7 +193,26 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet appareil?",
-    "lowBattery": "Batterie faible!"
+    "lowBattery": "Batterie faible!",
+    "chargedWithoutUse": "Chargé sans utilisation",
+    "markDefective": "Déchargé profondément / Défectueux",
+    "confirmChargedWithoutUse": "L'appareil a été chargé mais pas utilisé?",
+    "confirmMarkDefective": "Marquer l'appareil comme déchargé profondément ou défectueux?",
+    "markedAsChargedWithoutUse": "✅ Marqué comme chargé sans utilisation",
+    "markedAsDefective": "⚠️ Marqué comme défectueux",
+    "types": {
+      "drone": "Drone",
+      "camera": "Caméra",
+      "laptop": "Ordinateur portable",
+      "phone": "Smartphone",
+      "tablet": "Tablette",
+      "smartwatch": "Montre connectée",
+      "headphones": "Écouteurs",
+      "speaker": "Haut-parleur",
+      "e-bike": "Vélo électrique",
+      "rc-car": "Véhicule RC",
+      "other": "Autre"
+    }
   },
   "admin": {
     "title": "Tableau de bord Admin",

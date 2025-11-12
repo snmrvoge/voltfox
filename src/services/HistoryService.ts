@@ -32,6 +32,17 @@ export interface HistoryEntry {
   status: string;
 }
 
+export type DeviceEventType =
+  | 'charged_without_use'  // Device was charged but not used
+  | 'marked_defective';    // Device was marked as defective/deep discharged
+
+export interface DeviceEvent {
+  id?: string;
+  type: DeviceEventType;
+  timestamp: Date;
+  notes?: string;
+}
+
 export class HistoryService {
   /**
    * Record a snapshot of the device's current state
@@ -53,6 +64,72 @@ export class HistoryService {
     } catch (error) {
       console.error('Error recording snapshot:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Record a device event (usage, defect, etc.)
+   */
+  static async recordEvent(
+    userId: string,
+    deviceId: string,
+    eventType: DeviceEventType,
+    notes?: string
+  ): Promise<void> {
+    try {
+      const eventsRef = collection(db, 'users', userId, 'devices', deviceId, 'events');
+
+      await addDoc(eventsRef, {
+        type: eventType,
+        timestamp: Timestamp.now(),
+        notes: notes || ''
+      });
+
+      console.log(`Event recorded for device ${deviceId}: ${eventType}`);
+    } catch (error) {
+      console.error('Error recording event:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get events for a device
+   */
+  static async getEvents(
+    userId: string,
+    deviceId: string,
+    eventType?: DeviceEventType
+  ): Promise<DeviceEvent[]> {
+    try {
+      const eventsRef = collection(db, 'users', userId, 'devices', deviceId, 'events');
+
+      let q;
+      if (eventType) {
+        q = query(
+          eventsRef,
+          where('type', '==', eventType),
+          orderBy('timestamp', 'desc'),
+          limit(100)
+        );
+      } else {
+        q = query(
+          eventsRef,
+          orderBy('timestamp', 'desc'),
+          limit(100)
+        );
+      }
+
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        type: doc.data().type as DeviceEventType,
+        timestamp: doc.data().timestamp.toDate(),
+        notes: doc.data().notes
+      }));
+    } catch (error) {
+      console.error('Error getting events:', error);
+      return [];
     }
   }
 

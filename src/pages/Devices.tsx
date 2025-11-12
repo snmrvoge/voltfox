@@ -1,13 +1,18 @@
 // src/pages/Devices.tsx
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Battery, Plus, AlertCircle, Edit, ArrowLeft, Zap } from 'lucide-react';
+import { Battery, Plus, AlertCircle, Edit, ArrowLeft, Zap, BatteryCharging, AlertTriangle } from 'lucide-react';
 import { useDevices } from '../context/DeviceContext';
+import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { HistoryService } from '../services/HistoryService';
 import toast from 'react-hot-toast';
 
 const Devices: React.FC = () => {
   const navigate = useNavigate();
   const { devices, loading, updateDevice } = useDevices();
+  const { currentUser } = useAuth();
+  const { t } = useTranslation();
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
 
   const handleFullyCharged = async (deviceId: string, deviceName: string) => {
@@ -17,6 +22,39 @@ const Devices: React.FC = () => {
     } catch (error) {
       console.error('Error updating charge:', error);
       toast.error('Fehler beim Aktualisieren');
+    }
+  };
+
+  const handleChargedWithoutUse = async (deviceId: string, deviceName: string) => {
+    if (!currentUser) return;
+
+    const confirmed = window.confirm(t('devices.confirmChargedWithoutUse'));
+    if (!confirmed) return;
+
+    try {
+      const now = new Date().toISOString();
+      await updateDevice(deviceId, { lastUsed: now });
+      await HistoryService.recordEvent(currentUser.uid, deviceId, 'charged_without_use');
+      toast.success(t('devices.markedAsChargedWithoutUse'));
+    } catch (error) {
+      console.error('Error recording charged without use:', error);
+      toast.error('Fehler beim Speichern');
+    }
+  };
+
+  const handleMarkDefective = async (deviceId: string, deviceName: string) => {
+    if (!currentUser) return;
+
+    const confirmed = window.confirm(t('devices.confirmMarkDefective'));
+    if (!confirmed) return;
+
+    try {
+      await updateDevice(deviceId, { isDefective: true });
+      await HistoryService.recordEvent(currentUser.uid, deviceId, 'marked_defective');
+      toast.error(t('devices.markedAsDefective'));
+    } catch (error) {
+      console.error('Error marking device as defective:', error);
+      toast.error('Fehler beim Speichern');
     }
   };
 
@@ -236,6 +274,78 @@ const Devices: React.FC = () => {
                   <Edit size={14} />
                   Edit
                 </Link>
+              </div>
+
+              {/* New Action Buttons Row */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => device.id && handleChargedWithoutUse(device.id, device.name)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 6px rgba(59, 130, 246, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 10px rgba(59, 130, 246, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(59, 130, 246, 0.3)';
+                  }}
+                  title={t('devices.chargedWithoutUse')}
+                >
+                  <BatteryCharging size={14} />
+                  {t('devices.chargedWithoutUse').length > 20
+                    ? t('devices.chargedWithoutUse').substring(0, 18) + '...'
+                    : t('devices.chargedWithoutUse')}
+                </button>
+                <button
+                  onClick={() => device.id && handleMarkDefective(device.id, device.name)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 4px 10px rgba(239, 68, 68, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
+                  }}
+                  title={t('devices.markDefective')}
+                >
+                  <AlertTriangle size={14} />
+                  {t('devices.markDefective').length > 20
+                    ? t('devices.markDefective').substring(0, 18) + '...'
+                    : t('devices.markDefective')}
+                </button>
               </div>
             </div>
           ))}

@@ -20,7 +20,7 @@
   "landing": {
     "hero": {
       "title": "Non perdere mai più un dispositivo per batterie scariche",
-      "description": "La volpe intelligente sorveglia le tue batterie 24/7 con previsioni basate sull'IA e avvisi istantanei. Unisciti a 50.000+ utenti che non si preoccupano più delle batterie scariche.",
+      "description": "La volpe intelligente sorveglia le tue batterie ricaricabili 24/7 con previsioni basate sull'IA e avvisi istantanei. Unisciti a 50.000+ utenti che non si preoccupano più delle batterie scariche.",
       "startMonitoring": "Inizia gratis",
       "watchDemo": "Guarda la demo"
     },
@@ -193,7 +193,26 @@
     "edit": "Modifica",
     "delete": "Elimina",
     "confirmDelete": "Sei sicuro di voler eliminare questo dispositivo?",
-    "lowBattery": "Batteria scarica!"
+    "lowBattery": "Batteria scarica!",
+    "chargedWithoutUse": "Caricato senza uso",
+    "markDefective": "Scaricato profondamente / Difettoso",
+    "confirmChargedWithoutUse": "Il dispositivo è stato caricato ma non utilizzato?",
+    "confirmMarkDefective": "Contrassegnare il dispositivo come scaricato profondamente o difettoso?",
+    "markedAsChargedWithoutUse": "✅ Contrassegnato come caricato senza uso",
+    "markedAsDefective": "⚠️ Contrassegnato come difettoso",
+    "types": {
+      "drone": "Drone",
+      "camera": "Fotocamera",
+      "laptop": "Laptop",
+      "phone": "Smartphone",
+      "tablet": "Tablet",
+      "smartwatch": "Smartwatch",
+      "headphones": "Cuffie",
+      "speaker": "Altoparlante",
+      "e-bike": "E-Bike",
+      "rc-car": "Veicolo RC",
+      "other": "Altro"
+    }
   },
   "admin": {
     "title": "Dashboard Admin",

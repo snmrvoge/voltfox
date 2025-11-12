@@ -20,7 +20,7 @@
   "landing": {
     "hero": {
       "title": "Never Lose a Device to Dead Batteries",
-      "description": "The smart fox watches over your batteries 24/7 with AI-powered predictions and instant alerts. Join 50,000+ users who never worry about dead batteries.",
+      "description": "The smart fox watches over your rechargeable batteries 24/7 with AI-powered predictions and instant alerts. Join 50,000+ users who never worry about dead batteries.",
       "startMonitoring": "Start Free Monitoring",
       "watchDemo": "Watch Demo"
     },
@@ -193,7 +193,26 @@
     "edit": "Edit",
     "delete": "Delete",
     "confirmDelete": "Are you sure you want to delete this device?",
-    "lowBattery": "Low battery!"
+    "lowBattery": "Low battery!",
+    "chargedWithoutUse": "Charged Without Use",
+    "markDefective": "Deep Discharged / Defective",
+    "confirmChargedWithoutUse": "Device was charged but not used?",
+    "confirmMarkDefective": "Mark device as deep discharged or defective?",
+    "markedAsChargedWithoutUse": "✅ Marked as charged without use",
+    "markedAsDefective": "⚠️ Marked as defective",
+    "types": {
+      "drone": "Drone",
+      "camera": "Camera",
+      "laptop": "Laptop",
+      "phone": "Smartphone",
+      "tablet": "Tablet",
+      "smartwatch": "Smartwatch",
+      "headphones": "Headphones",
+      "speaker": "Speaker",
+      "e-bike": "E-Bike",
+      "rc-car": "RC Vehicle",
+      "other": "Other"
+    }
   },
   "admin": {
     "title": "Admin Dashboard",

@@ -46,6 +46,9 @@ interface Device {
   serialNumber?: string;
   warrantyUntil?: string;
   receiptUrls?: string[];
+  // Usage and defect tracking
+  lastUsed?: string;
+  isDefective?: boolean;
   createdAt?: any;
   updatedAt?: any;
 }

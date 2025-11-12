@@ -39,6 +39,7 @@ const AddDevice: React.FC = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
 
   const deviceTypes = [
     'drone',
@@ -50,12 +51,13 @@ const AddDevice: React.FC = () => {
     'headphones',
     'speaker',
     'e-bike',
+    'rc-car',
     'other'
   ];
 
   const communityIcons = [
     '🔋', '⚡', '🔌', '📱', '💻', '🎧', '📷', '🎮',
-    '⌚', '🚁', '🚲', '🔊', '🎵', '💡', '🔦', '⏰'
+    '⌚', '🚁', '🚲', '🏎️', '🚗', '🔊', '🎵', '💡', '🔦', '⏰'
   ];
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,19 +158,12 @@ const AddDevice: React.FC = () => {
       }
 
       setFormData({ ...formData, ...updates });
+      setAiResult(result);
 
       toast.success(
-        `KI-Analyse abgeschlossen! (${result.confidence}% Sicherheit)`,
-        { id: 'ai-analysis' }
+        `✅ KI-Analyse abgeschlossen!`,
+        { id: 'ai-analysis', duration: 3000 }
       );
-
-      // Show detailed results
-      if (result.deviceName || result.brand) {
-        toast.success(`Erkannt: ${result.deviceName || result.brand}`, { duration: 4000 });
-      }
-      if (result.batteryType) {
-        toast.success(`Batterie: ${result.batteryType}`, { duration: 4000 });
-      }
 
     } catch (error: any) {
       console.error('AI Analysis Error:', error);
@@ -376,14 +371,13 @@ const AddDevice: React.FC = () => {
                       disabled={isAnalyzing}
                       style={{
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: isAnalyzing ? '12px' : '8px',
                         margin: '1rem auto 0',
-                        padding: '0.75rem 1.5rem',
-                        background: isAnalyzing
-                          ? '#ccc'
-                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        padding: isAnalyzing ? '1rem 1.5rem' : '0.75rem 1.5rem',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         color: 'white',
                         border: 'none',
                         borderRadius: '25px',
@@ -392,12 +386,129 @@ const AddDevice: React.FC = () => {
                         fontSize: '0.95rem',
                         boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
                         transition: 'all 0.3s',
-                        opacity: isAnalyzing ? 0.6 : 1
+                        position: 'relative'
                       }}
                     >
-                      <Sparkles size={18} />
-                      {isAnalyzing ? 'Analysiere...' : '🤖 Mit KI analysieren (BETA)'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Sparkles
+                          size={24}
+                          style={{
+                            animation: isAnalyzing ? 'spin 2s linear infinite' : 'none',
+                            filter: isAnalyzing ? 'drop-shadow(0 0 8px rgba(255,215,0,0.8))' : 'none'
+                          }}
+                        />
+                        <span style={{ fontSize: '1rem', fontWeight: 700 }}>
+                          {isAnalyzing ? '🤖 Analysiere Bild...' : '🤖 Mit KI analysieren (BETA)'}
+                        </span>
+                      </div>
+                      {isAnalyzing && (
+                        <span style={{
+                          fontSize: '0.9rem',
+                          fontWeight: 500,
+                          opacity: 0.95,
+                          animation: 'pulse 2s ease-in-out infinite'
+                        }}>
+                          ⏳ Bitte um Geduld, das kann bis zu 30 Sekunden dauern
+                        </span>
+                      )}
+                      <style>{`
+                        @keyframes spin {
+                          from { transform: rotate(0deg); }
+                          to { transform: rotate(360deg); }
+                        }
+                        @keyframes pulse {
+                          0%, 100% { opacity: 0.9; }
+                          50% { opacity: 1; }
+                        }
+                      `}</style>
                     </button>
+                  )}
+
+                  {/* AI Analysis Result Box */}
+                  {aiResult && !isAnalyzing && (
+                    <div style={{
+                      marginTop: '1.5rem',
+                      padding: '1.5rem',
+                      background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+                      border: '3px solid #10B981',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+                      animation: 'slideIn 0.4s ease-out'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '1rem'
+                      }}>
+                        <Sparkles size={24} color="#059669" />
+                        <h3 style={{
+                          margin: 0,
+                          color: '#065F46',
+                          fontSize: '1.1rem',
+                          fontWeight: 700
+                        }}>
+                          ✅ Erkannt - Bitte überprüfen!
+                        </h3>
+                      </div>
+
+                      <div style={{ color: '#065F46', fontSize: '0.95rem', lineHeight: '1.8' }}>
+                        {(aiResult.deviceName || aiResult.brand) && (
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <strong>Gerät:</strong> {aiResult.deviceName || `${aiResult.brand} ${aiResult.model || ''}`.trim()}
+                          </div>
+                        )}
+                        {aiResult.deviceType && (
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <strong>Typ:</strong> {aiResult.deviceType}
+                          </div>
+                        )}
+                        {aiResult.batteryType && (
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <strong>Batterie:</strong> {aiResult.batteryType}
+                          </div>
+                        )}
+                        {aiResult.confidence && (
+                          <div style={{ marginTop: '0.8rem', fontSize: '0.9rem', opacity: 0.8 }}>
+                            <strong>Sicherheit:</strong> {aiResult.confidence}%
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setAiResult(null)}
+                        style={{
+                          marginTop: '1rem',
+                          padding: '0.5rem 1rem',
+                          background: '#059669',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = '#047857')}
+                        onMouseOut={(e) => (e.currentTarget.style.background = '#059669')}
+                      >
+                        OK, verstanden
+                      </button>
+
+                      <style>{`
+                        @keyframes slideIn {
+                          from {
+                            opacity: 0;
+                            transform: translateY(-20px);
+                          }
+                          to {
+                            opacity: 1;
+                            transform: translateY(0);
+                          }
+                        }
+                      `}</style>
+                    </div>
                   )}
                 </div>
               )}
