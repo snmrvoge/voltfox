@@ -306,7 +306,7 @@ const EditDevice: React.FC = () => {
       </div>
 
       {/* Usage Information Display */}
-      {(device.lastUsed || device.lastCharged || device.isDefective) && (
+      {(device.lastUsed || device.lastCharged || device.createdAt || device.isDefective) && (
         <div style={{
           background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
           padding: '1.5rem',
@@ -384,6 +384,38 @@ const EditDevice: React.FC = () => {
                   })()}
                   {' '}
                   ({new Date(device.lastCharged).toLocaleDateString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })})
+                </span>
+              </div>
+            )}
+
+            {device.createdAt && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#1E40AF',
+                fontSize: '0.95rem'
+              }}>
+                <span style={{ fontWeight: 'bold', minWidth: '140px' }}>📅 Gerät hinzugefügt:</span>
+                <span>
+                  {(() => {
+                    const createdDate = new Date(device.createdAt);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 0) return 'Heute';
+                    if (diffDays === 1) return 'Gestern';
+                    if (diffDays < 7) return `vor ${diffDays} Tagen`;
+                    if (diffDays < 30) return `vor ${Math.floor(diffDays / 7)} Wochen`;
+                    return `vor ${Math.floor(diffDays / 30)} Monaten`;
+                  })()}
+                  {' '}
+                  ({new Date(device.createdAt).toLocaleDateString('de-DE', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
