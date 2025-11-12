@@ -182,10 +182,44 @@ const AddDevice: React.FC = () => {
     e.preventDefault();
 
     try {
-      await addDevice(formData);
+      // Clean up formData: only include filled fields
+      const cleanedData: any = {
+        name: formData.name,
+        type: formData.type,
+        chemistry: formData.chemistry,
+        dischargeRate: formData.dischargeRate,
+        health: formData.health,
+        status: formData.status,
+        currentCharge: formData.currentCharge,
+        lastCharged: formData.lastCharged,
+        reminderFrequency: formData.reminderFrequency
+      };
+
+      // Add icon or imageUrl
+      if (formData.imageUrl) {
+        cleanedData.imageUrl = formData.imageUrl;
+        cleanedData.icon = '';
+      } else {
+        cleanedData.icon = formData.icon;
+        cleanedData.imageUrl = '';
+      }
+
+      // Only add insurance fields if they have values
+      if (formData.purchaseDate) cleanedData.purchaseDate = formData.purchaseDate;
+      if (formData.purchasePrice !== undefined && formData.purchasePrice > 0) {
+        cleanedData.purchasePrice = formData.purchasePrice;
+      }
+      if (formData.currentValue !== undefined && formData.currentValue > 0) {
+        cleanedData.currentValue = formData.currentValue;
+      }
+      if (formData.serialNumber) cleanedData.serialNumber = formData.serialNumber;
+      if (formData.warrantyUntil) cleanedData.warrantyUntil = formData.warrantyUntil;
+
+      await addDevice(cleanedData);
       toast.success('Gerät hinzugefügt!');
       navigate('/devices');
     } catch (error) {
+      console.error('Error adding device:', error);
       toast.error('Fehler beim Hinzufügen');
     }
   };
