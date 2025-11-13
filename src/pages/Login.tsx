@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { auth, googleProvider } from '../config/firebase';
+import { auth, googleProvider, appleProvider } from '../config/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -38,6 +38,19 @@ export default function Login() {
     } catch (err) {
       console.error('Google Sign In error:', err);
       setError('Google Sign In failed');
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithPopup(auth, appleProvider);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Apple Sign In error:', err);
+      setError('Apple Sign In failed');
       setLoading(false);
     }
   };
@@ -212,11 +225,35 @@ export default function Login() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            marginBottom: '0.75rem'
           }}
         >
           <span style={{ fontSize: '1.2rem' }}>🌐</span>
           {t('auth.login.google')}
+        </button>
+
+        <button
+          onClick={handleAppleSignIn}
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            background: 'white',
+            color: '#2E3A4B',
+            border: '2px solid #E5E7EB',
+            borderRadius: '10px',
+            fontSize: '1rem',
+            fontWeight: '500',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>🍎</span>
+          Mit Apple anmelden
         </button>
 
         <p style={{
