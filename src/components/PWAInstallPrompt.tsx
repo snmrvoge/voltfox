@@ -160,7 +160,7 @@ export const PWAInstallPrompt: React.FC = () => {
             </div>
           ) : (
             <>
-              <p style={{ margin: '0 0 12px 0', fontSize: '0.9rem', lineHeight: '1.5', opacity: 0.95' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '0.9rem', lineHeight: '1.5', opacity: 0.95 }}>
                 Schneller Zugriff, Offline-Nutzung und Push-Benachrichtigungen für deine Akkus.
               </p>
               <button
