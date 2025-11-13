@@ -1,8 +1,13 @@
 // src/services/NotificationService.ts
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import app from '../config/firebase';
+
 export class NotificationService {
   private static hasPermission = false;
+  private static fcmToken: string | null = null;
+  private static messaging = typeof window !== 'undefined' ? getMessaging(app) : null;
 
-  // Request notification permission
+  // Request notification permission and get FCM token
   static async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
       console.log('This browser does not support notifications');
@@ -11,16 +16,79 @@ export class NotificationService {
 
     if (Notification.permission === 'granted') {
       this.hasPermission = true;
+      await this.getFCMToken();
       return true;
     }
 
     if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       this.hasPermission = permission === 'granted';
+
+      if (this.hasPermission) {
+        await this.getFCMToken();
+      }
+
       return this.hasPermission;
     }
 
     return false;
+  }
+
+  // Get Firebase Cloud Messaging token
+  static async getFCMToken(): Promise<string | null> {
+    if (!this.messaging) {
+      console.log('Firebase Messaging not available');
+      return null;
+    }
+
+    try {
+      const token = await getToken(this.messaging, {
+        vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY
+      });
+
+      if (token) {
+        console.log('FCM Token:', token);
+        this.fcmToken = token;
+
+        // Store token in Firestore for the current user
+        // You can implement this to send notifications from backend
+        // await this.saveTokenToFirestore(token);
+
+        return token;
+      } else {
+        console.log('No FCM token available');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error getting FCM token:', error);
+      return null;
+    }
+  }
+
+  // Initialize foreground message listener
+  static initializeForegroundListener() {
+    if (!this.messaging) return;
+
+    onMessage(this.messaging, (payload) => {
+      console.log('Foreground message received:', payload);
+
+      // Show notification when app is in foreground
+      if (payload.notification) {
+        this.send(
+          payload.notification.title || 'VoltFox Benachrichtigung',
+          {
+            body: payload.notification.body,
+            icon: payload.notification.icon || '/logo192.png',
+            data: payload.data
+          }
+        );
+      }
+    });
+  }
+
+  // Get stored FCM token
+  static getToken(): string | null {
+    return this.fcmToken;
   }
 
   // Check if notifications are enabled

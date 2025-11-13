@@ -24,6 +24,8 @@ import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import { FirebaseStatus } from './components/FirebaseStatus';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { NotificationService } from './services/NotificationService';
 
 // Styles
 import './styles/App.css';
@@ -44,6 +46,21 @@ function App() {
       '%cNever let them die again! Join us at voltfox.app',
       'color: #FF6B35; font-size: 12px;'
     );
+
+    // Initialize FCM foreground listener
+    NotificationService.initializeForegroundListener();
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
   }, []);
 
   return (
@@ -136,7 +153,10 @@ function App() {
             </main>
 
             <Footer />
-            
+
+            {/* PWA Install Prompt */}
+            <PWAInstallPrompt />
+
             {/* Mr. Vision Credit Badge */}
             <a
               href="https://mr-vision.ch"
