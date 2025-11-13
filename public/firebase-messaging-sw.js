@@ -7,12 +7,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-comp
 // Firebase configuration (must match your config)
 // Note: This is safe to expose in a service worker
 const firebaseConfig = {
-  apiKey: "AIzaSyDYourApiKeyHere", // Will be replaced dynamically
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyASKFkICjgic90MsskJtPz8OjxznbLpbwQ",
+  authDomain: "voltfox-b1cef.firebaseapp.com",
+  projectId: "voltfox-b1cef",
+  storageBucket: "voltfox-b1cef.firebasestorage.app",
+  messagingSenderId: "746607802051",
+  appId: "1:746607802051:web:30bedee04d459690989476"
 };
 
 // Initialize Firebase
