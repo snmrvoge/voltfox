@@ -8,6 +8,8 @@ import { db } from '../config/firebase';
 import { NotificationService } from '../services/NotificationService';
 import { ArrowLeft, Bell, Mail, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../config/firebase';
 
 interface NotificationPreferences {
   browserNotifications: boolean;
@@ -87,7 +89,12 @@ export default function NotificationSettings() {
   };
 
   const requestBrowserPermission = async () => {
-    const granted = await NotificationService.requestPermission();
+    if (!currentUser) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    const granted = await NotificationService.requestPermission(currentUser.uid);
     setBrowserPermission(Notification.permission);
 
     if (granted) {
@@ -108,6 +115,40 @@ export default function NotificationSettings() {
       await requestBrowserPermission();
     } else {
       setPreferences({ ...preferences, browserNotifications: !preferences.browserNotifications });
+    }
+  };
+
+  const sendTestNotification = async (testType: 'push' | 'email' | 'both') => {
+    if (!currentUser) return;
+
+    const loadingToast = toast.loading(
+      testType === 'push' ? 'Sende Test-Push...' :
+      testType === 'email' ? 'Sende Test-E-Mail...' :
+      'Sende Test-Benachrichtigungen...'
+    );
+
+    try {
+      const sendTestNotifications = httpsCallable(functions, 'sendTestNotifications');
+      const result = await sendTestNotifications({ testType }) as any;
+
+      toast.dismiss(loadingToast);
+
+      if (result.data.pushSent || result.data.emailSent) {
+        const messages = [];
+        if (result.data.pushSent) {
+          messages.push(`📱 Push an ${result.data.pushCount} Gerät${result.data.pushCount !== 1 ? 'e' : ''}`);
+        }
+        if (result.data.emailSent) {
+          messages.push('📧 E-Mail');
+        }
+        toast.success(`✅ Test erfolgreich!\n${messages.join(' & ')} gesendet`);
+      } else {
+        toast.error('❌ Keine Benachrichtigungen gesendet. Prüfe deine Einstellungen.');
+      }
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      console.error('Error sending test notification:', error);
+      toast.error(`❌ Fehler: ${error.message}`);
     }
   };
 
@@ -238,7 +279,7 @@ export default function NotificationSettings() {
           </div>
         </div>
 
-        {/* Test Notification Button */}
+        {/* Test Notification Buttons */}
         <div style={{
           background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
           padding: '1.5rem',
@@ -247,74 +288,145 @@ export default function NotificationSettings() {
           border: '2px solid #3B82F6',
           boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
         }}>
-          <div style={{
+          <h3 style={{
+            color: '#1E40AF',
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            margin: '0 0 0.5rem 0',
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '0.5rem'
+            gap: '8px'
           }}>
-            <h3 style={{
-              color: '#1E40AF',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              🧪 Test-Benachrichtigung
-            </h3>
-          </div>
+            🧪 Test-Benachrichtigungen
+          </h3>
           <p style={{ color: '#1E40AF', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Teste, ob Browser-Benachrichtigungen funktionieren
+            Teste deine Benachrichtigungseinstellungen
           </p>
-          <button
-            onClick={() => {
-              if (Notification.permission === 'granted') {
-                NotificationService.send(t('notifications.test.title'), {
-                  body: t('notifications.test.body')
-                });
-                toast.success('🔔 Test-Benachrichtigung gesendet!');
-              } else {
-                toast.error('⚠️ Bitte aktiviere zuerst Browser-Benachrichtigungen!');
-              }
-            }}
-            disabled={browserPermission !== 'granted'}
-            style={{
-              width: '100%',
-              padding: '0.75rem 1.5rem',
-              background: browserPermission === 'granted'
-                ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
-                : '#D1D5DB',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              cursor: browserPermission === 'granted' ? 'pointer' : 'not-allowed',
-              transition: 'all 0.3s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              boxShadow: browserPermission === 'granted' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
-            }}
-            onMouseOver={(e) => {
-              if (browserPermission === 'granted') {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (browserPermission === 'granted') {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-              }
-            }}
-          >
-            <Bell size={20} />
-            Test-Benachrichtigung senden
-          </button>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {/* Push Test Button */}
+            <button
+              onClick={() => sendTestNotification('push')}
+              disabled={browserPermission !== 'granted'}
+              style={{
+                flex: '1',
+                minWidth: '150px',
+                padding: '0.75rem 1.5rem',
+                background: browserPermission === 'granted'
+                  ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
+                  : '#D1D5DB',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 'bold',
+                fontSize: '0.95rem',
+                cursor: browserPermission === 'granted' ? 'pointer' : 'not-allowed',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: browserPermission === 'granted' ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none'
+              }}
+              onMouseOver={(e) => {
+                if (browserPermission === 'granted') {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.4)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (browserPermission === 'granted') {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+                }
+              }}
+            >
+              <Smartphone size={18} />
+              Test Push
+            </button>
+
+            {/* Email Test Button */}
+            <button
+              onClick={() => sendTestNotification('email')}
+              disabled={!preferences.emailNotifications}
+              style={{
+                flex: '1',
+                minWidth: '150px',
+                padding: '0.75rem 1.5rem',
+                background: preferences.emailNotifications
+                  ? 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)'
+                  : '#D1D5DB',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 'bold',
+                fontSize: '0.95rem',
+                cursor: preferences.emailNotifications ? 'pointer' : 'not-allowed',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: preferences.emailNotifications ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none'
+              }}
+              onMouseOver={(e) => {
+                if (preferences.emailNotifications) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (preferences.emailNotifications) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+                }
+              }}
+            >
+              <Mail size={18} />
+              Test E-Mail
+            </button>
+
+            {/* Both Test Button */}
+            <button
+              onClick={() => sendTestNotification('both')}
+              disabled={browserPermission !== 'granted' && !preferences.emailNotifications}
+              style={{
+                flex: '1',
+                minWidth: '150px',
+                padding: '0.75rem 1.5rem',
+                background: (browserPermission === 'granted' || preferences.emailNotifications)
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : '#D1D5DB',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 'bold',
+                fontSize: '0.95rem',
+                cursor: (browserPermission === 'granted' || preferences.emailNotifications) ? 'pointer' : 'not-allowed',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: (browserPermission === 'granted' || preferences.emailNotifications) ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'
+              }}
+              onMouseOver={(e) => {
+                if (browserPermission === 'granted' || preferences.emailNotifications) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (browserPermission === 'granted' || preferences.emailNotifications) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                }
+              }}
+            >
+              <Bell size={18} />
+              Test Beide
+            </button>
+          </div>
         </div>
 
         {/* Email Notifications */}

@@ -4,6 +4,7 @@ import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getFunctions } from 'firebase/functions';
 
 // Production-ready config with validation
 const firebaseConfig = {
@@ -56,6 +57,7 @@ try {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 // Test Firestore connectivity
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {

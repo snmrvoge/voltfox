@@ -1,6 +1,7 @@
 // src/services/NotificationService.ts
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import app from '../config/firebase';
+import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import app, { db } from '../config/firebase';
 
 export class NotificationService {
   private static hasPermission = false;
@@ -8,7 +9,7 @@ export class NotificationService {
   private static messaging = typeof window !== 'undefined' ? getMessaging(app) : null;
 
   // Request notification permission and get FCM token
-  static async requestPermission(): Promise<boolean> {
+  static async requestPermission(userId?: string): Promise<boolean> {
     if (!('Notification' in window)) {
       console.log('This browser does not support notifications');
       return false;
@@ -16,7 +17,7 @@ export class NotificationService {
 
     if (Notification.permission === 'granted') {
       this.hasPermission = true;
-      await this.getFCMToken();
+      await this.getFCMToken(userId);
       return true;
     }
 
@@ -25,7 +26,7 @@ export class NotificationService {
       this.hasPermission = permission === 'granted';
 
       if (this.hasPermission) {
-        await this.getFCMToken();
+        await this.getFCMToken(userId);
       }
 
       return this.hasPermission;
@@ -35,7 +36,7 @@ export class NotificationService {
   }
 
   // Get Firebase Cloud Messaging token
-  static async getFCMToken(): Promise<string | null> {
+  static async getFCMToken(userId?: string): Promise<string | null> {
     if (!this.messaging) {
       console.log('Firebase Messaging not available');
       return null;
@@ -51,8 +52,9 @@ export class NotificationService {
         this.fcmToken = token;
 
         // Store token in Firestore for the current user
-        // You can implement this to send notifications from backend
-        // await this.saveTokenToFirestore(token);
+        if (userId) {
+          await this.saveTokenToFirestore(userId, token);
+        }
 
         return token;
       } else {
@@ -62,6 +64,28 @@ export class NotificationService {
     } catch (error) {
       console.error('Error getting FCM token:', error);
       return null;
+    }
+  }
+
+  // Save FCM token to Firestore user document
+  private static async saveTokenToFirestore(userId: string, token: string): Promise<void> {
+    try {
+      const userRef = doc(db, 'users', userId);
+
+      // Check if user document exists
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        // Add token to fcmTokens array (arrayUnion prevents duplicates)
+        await updateDoc(userRef, {
+          fcmTokens: arrayUnion(token)
+        });
+        console.log('FCM token saved to Firestore');
+      } else {
+        console.error('User document does not exist');
+      }
+    } catch (error) {
+      console.error('Error saving FCM token to Firestore:', error);
     }
   }
 
