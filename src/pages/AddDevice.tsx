@@ -613,8 +613,8 @@ const AddDevice: React.FC = () => {
             setShowWizard(false);
             setShowBarcodeScanner(true);
           }}
-          onManualEntry={() => {
-            setShowWizard(false);
+          onComplete={() => {
+            navigate('/devices');
           }}
         />
       ) : (
