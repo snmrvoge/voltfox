@@ -64,6 +64,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   // Multiple batteries
   const [batteryOption, setBatteryOption] = useState<'single' | 'multiple' | 'drone-controller' | 'mixed'>('single');
   const [batteryCount, setBatteryCount] = useState(1);
+  const [componentNames, setComponentNames] = useState<string[]>([]);
 
   // Photo upload
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -202,12 +203,26 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
           status: 'healthy',
           lastCharged: new Date().toISOString()
         }));
-      } else if (batteryOption === 'drone-controller') {
-        // TODO: Implement separate device creation for drone + controller
-        toast('🚁 Drohne + Controller: Bitte zunächst die Drohne speichern, dann Controller separat hinzufügen', { duration: 5000 });
-      } else if (batteryOption === 'mixed') {
-        // TODO: Implement separate device creation for mixed batteries
-        toast('📷 Verschiedene Akkus: Bitte jedes Gerät separat hinzufügen', { duration: 5000 });
+      } else if (batteryOption === 'drone-controller' && componentNames.length > 0) {
+        // Create batteries array with custom component names
+        deviceData.batteries = componentNames.map((name, i) => ({
+          id: `component-${i + 1}`,
+          name: name || `Komponente ${i + 1}`,
+          currentCharge: parseFloat(currentCharge) || 100,
+          health: parseFloat(health) || 100,
+          status: 'healthy',
+          lastCharged: new Date().toISOString()
+        }));
+      } else if (batteryOption === 'mixed' && componentNames.length > 0) {
+        // Create batteries array with custom battery names
+        deviceData.batteries = componentNames.map((name, i) => ({
+          id: `battery-${i + 1}`,
+          name: name || `Akku ${i + 1}`,
+          currentCharge: parseFloat(currentCharge) || 100,
+          health: parseFloat(health) || 100,
+          status: 'healthy',
+          lastCharged: new Date().toISOString()
+        }));
       }
 
       await addDevice(deviceData);
@@ -542,7 +557,13 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
             </div>
 
             {/* Drone + Controller */}
-            <div onClick={() => { clickSound(); setBatteryOption('drone-controller'); }}
+            <div onClick={() => {
+              clickSound();
+              setBatteryOption('drone-controller');
+              if (componentNames.length === 0) {
+                setComponentNames(['Hauptgerät', 'Fernbedienung']);
+              }
+            }}
               style={{
                 padding: '1.5rem',
                 background: batteryOption === 'drone-controller' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' : '#F8FAFC',
@@ -554,12 +575,49 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
                 boxShadow: batteryOption === 'drone-controller' ? '0 4px 15px rgba(139, 92, 246, 0.3)' : 'none'
               }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚁</div>
-              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, Drohne + Fernsteuerung</div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Separate Erfassung von Drohne und Controller</div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, mit separater Komponente</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>z.B. Drohne + Fernbedienung, beide gemeinsam verwalten</div>
+              {batteryOption === 'drone-controller' && (
+                <div style={{ marginTop: '1rem' }}>
+                  {componentNames.map((name, index) => (
+                    <div key={index} style={{ marginBottom: '0.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        {index === 0 ? 'Hauptgerät' : `Komponente ${index}`}
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => {
+                          const newNames = [...componentNames];
+                          newNames[index] = e.target.value;
+                          setComponentNames(newNames);
+                        }}
+                        placeholder={index === 0 ? 'z.B. Drohne' : 'z.B. Fernbedienung'}
+                        style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid white', borderRadius: '10px', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.9)', color: '#2E3A4B' }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setComponentNames([...componentNames, `Komponente ${componentNames.length}`]);
+                    }}
+                    style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid white', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    + Weitere Komponente
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Mixed Batteries */}
-            <div onClick={() => { clickSound(); setBatteryOption('mixed'); }}
+            <div onClick={() => {
+              clickSound();
+              setBatteryOption('mixed');
+              if (componentNames.length === 0) {
+                setComponentNames(['Hauptakku', 'Zusatzakku']);
+              }
+            }}
               style={{
                 padding: '1.5rem',
                 background: batteryOption === 'mixed' ? 'linear-gradient(135deg, #FF6B35 0%, #F97316 100%)' : '#F8FAFC',
@@ -572,7 +630,38 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
               }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
               <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, verschiedene Akkus</div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>z.B. Kamera + Batteriegriff (separate Erfassung)</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>z.B. Kamera + Batteriegriff, beide gemeinsam verwalten</div>
+              {batteryOption === 'mixed' && (
+                <div style={{ marginTop: '1rem' }}>
+                  {componentNames.map((name, index) => (
+                    <div key={index} style={{ marginBottom: '0.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        Akku {index + 1}
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => {
+                          const newNames = [...componentNames];
+                          newNames[index] = e.target.value;
+                          setComponentNames(newNames);
+                        }}
+                        placeholder={index === 0 ? 'z.B. Hauptakku' : 'z.B. Batteriegriff'}
+                        style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid white', borderRadius: '10px', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.9)', color: '#2E3A4B' }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setComponentNames([...componentNames, `Akku ${componentNames.length + 1}`]);
+                    }}
+                    style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid white', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    + Weiterer Akku
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
