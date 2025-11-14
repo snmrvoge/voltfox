@@ -74,6 +74,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   const [showInsurance, setShowInsurance] = useState(false);
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [warrantyPeriod, setWarrantyPeriod] = useState<'3months' | '6months' | '1year' | '2years' | 'custom'>('1year');
   const [warrantyUntil, setWarrantyUntil] = useState('');
 
   const deviceIcons = ['🔋', '⚡', '🔌', '📱', '💻', '🎧', '📷', '🎮', '⌚', '🚁', '🚲', '🏎️', '🚗', '🔊', '🎵', '💡', '🔦', '⏰'];
@@ -86,6 +87,30 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
       callback();
       setIsAnimating(false);
     }, 300);
+  };
+
+  const calculateWarrantyEndDate = (startDate: string, period: string): string => {
+    if (!startDate) return '';
+    const date = new Date(startDate);
+
+    switch (period) {
+      case '3months':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case '6months':
+        date.setMonth(date.getMonth() + 6);
+        break;
+      case '1year':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+      case '2years':
+        date.setFullYear(date.getFullYear() + 2);
+        break;
+      default:
+        return '';
+    }
+
+    return date.toISOString().split('T')[0];
   };
 
   const handleMethodSelect = (method: 'community' | 'camera' | 'manual') => {
@@ -810,7 +835,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
                   <strong>✅ Vorteile:</strong> Versicherungsschutz • Wertermittlung • Garantie-Tracking
                 </p>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Kaufpreis (CHF)</label>
                   <input type="number" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder="1500"
@@ -818,15 +843,69 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Kaufdatum</label>
-                  <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+                  <input type="date" value={purchaseDate} onChange={(e) => {
+                    setPurchaseDate(e.target.value);
+                    if (warrantyPeriod !== 'custom') {
+                      setWarrantyUntil(calculateWarrantyEndDate(e.target.value, warrantyPeriod));
+                    }
+                  }}
                     style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <div>
+              </div>
+
+              {purchaseDate && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Garantiedauer</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
+                    {[
+                      { value: '3months', label: '3 Monate' },
+                      { value: '6months', label: '6 Monate' },
+                      { value: '1year', label: '1 Jahr' },
+                      { value: '2years', label: '2 Jahre' },
+                      { value: 'custom', label: 'Individuell' }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setWarrantyPeriod(option.value as any);
+                          if (option.value !== 'custom') {
+                            setWarrantyUntil(calculateWarrantyEndDate(purchaseDate, option.value));
+                          }
+                        }}
+                        style={{
+                          padding: '0.75rem 0.5rem',
+                          background: warrantyPeriod === option.value ? '#3B82F6' : 'white',
+                          color: warrantyPeriod === option.value ? 'white' : '#2E3A4B',
+                          border: warrantyPeriod === option.value ? '2px solid #3B82F6' : '2px solid #E5E7EB',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: warrantyPeriod === option.value ? 'bold' : 'normal',
+                          fontSize: '0.9rem',
+                          transition: 'all 0.3s'
+                        }}>
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {warrantyPeriod === 'custom' && purchaseDate && (
+                <div style={{ marginBottom: '1rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Garantie bis</label>
                   <input type="date" value={warrantyUntil} onChange={(e) => setWarrantyUntil(e.target.value)}
                     style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-              </div>
+              )}
+
+              {warrantyUntil && (
+                <div style={{ padding: '1rem', background: '#DBEAFE', borderRadius: '8px', border: '1px solid #3B82F6' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#1E40AF' }}>
+                    ✅ Garantie bis: <strong>{new Date(warrantyUntil).toLocaleDateString('de-CH', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
