@@ -318,7 +318,13 @@ const AddDevice: React.FC = () => {
   };
 
   const handlePhotoCapture = async (imageFile: File) => {
-    console.log('Foto aufgenommen:', imageFile);
+    console.log('📸 Foto aufgenommen:', {
+      name: imageFile.name,
+      size: imageFile.size,
+      type: imageFile.type,
+      sizeMB: (imageFile.size / 1024 / 1024).toFixed(2) + ' MB'
+    });
+
     setShowBarcodeScanner(false);
     setUploadedFile(imageFile);
 
@@ -330,28 +336,50 @@ const AddDevice: React.FC = () => {
 
     setUploadingImage(true);
     try {
+      console.log('🔄 Starting upload...');
       toast.loading('⬆️ Uploading...', { id: 'upload-progress' });
 
       const timestamp = Date.now();
       const fileName = `${timestamp}_${imageFile.name}`;
       const storagePath = `device-images/${currentUser.uid}/new/${fileName}`;
 
+      console.log('📦 Upload path:', storagePath);
       const storageRef = ref(storage, storagePath);
+
+      console.log('⬆️ Uploading to Firebase Storage...');
       await uploadBytes(storageRef, imageFile);
+
+      console.log('✅ Upload complete, getting URL...');
       const url = await getDownloadURL(storageRef);
+      console.log('🔗 Download URL:', url);
 
       setFormData({ ...formData, imageUrl: url, icon: '' });
       setImageSource('upload');
 
       toast.success('✅ Upload complete!', { id: 'upload-progress' });
 
+      console.log('🤖 Starting AI analysis...');
       // Now analyze with AI
       await handleAIAnalysisWithFile(imageFile);
     } catch (error: any) {
-      console.error('Upload Fehler:', error);
-      toast.error('❌ Upload failed', { id: 'upload-progress' });
+      console.error('❌ Upload Fehler:', error);
+      console.error('Error details:', {
+        code: error?.code,
+        message: error?.message,
+        name: error?.name
+      });
+
+      let errorMessage = '❌ Upload failed';
+      if (error?.code === 'storage/unauthorized') {
+        errorMessage = '❌ Keine Berechtigung. Firebase Storage Rules prüfen!';
+      } else if (error?.message) {
+        errorMessage = `❌ ${error.message}`;
+      }
+
+      toast.error(errorMessage, { id: 'upload-progress', duration: 5000 });
     } finally {
       setUploadingImage(false);
+      console.log('🏁 Upload process finished');
     }
   };
 
