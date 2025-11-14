@@ -50,6 +50,8 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   const [voltage, setVoltage] = useState('');
   const [capacity, setCapacity] = useState('');
   const [chemistry, setChemistry] = useState('LiPo');
+  const [currentCharge, setCurrentCharge] = useState('100');
+  const [health, setHealth] = useState('100');
 
   // Extra batteries
   const [hasExtraBatteries, setHasExtraBatteries] = useState(false);
@@ -110,9 +112,9 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
         type: deviceType,
         brand: '',
         model: '',
-        health: 100,
+        health: parseFloat(health) || 100,
         status: 'healthy',
-        currentCharge: 100,
+        currentCharge: parseFloat(currentCharge) || 100,
         chemistry: chemistry,
         dischargeRate: 1.0,
         lastCharged: new Date().toISOString(),
@@ -662,7 +664,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
             borderRadius: '10px'
           }}>
             <p style={{ color: '#666', margin: 0 }}>
-              💡 Das war's schon! Akku-Details kannst du später hinzufügen.
+              💡 Im nächsten Schritt kannst du direkt speichern oder Details hinzufügen.
             </p>
           </div>
         </div>
@@ -874,93 +876,167 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
           </div>
 
           {hasVoltage && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '1rem',
-              marginBottom: '2rem',
-              animation: 'slideIn 0.5s'
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#2E3A4B',
-                  fontWeight: 'bold'
-                }}>
-                  Voltage (V)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={voltage}
-                  onChange={(e) => setVoltage(e.target.value)}
-                  placeholder="11.1"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    fontSize: '1rem',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '10px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
+            <div style={{ animation: 'slideIn 0.5s' }}>
+              {/* Technical Specs */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '1rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#2E3A4B',
+                    fontWeight: 'bold'
+                  }}>
+                    Voltage (V)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={voltage}
+                    onChange={(e) => setVoltage(e.target.value)}
+                    placeholder="11.1"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#2E3A4B',
+                    fontWeight: 'bold'
+                  }}>
+                    Capacity (mAh)
+                  </label>
+                  <input
+                    type="number"
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                    placeholder="3830"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#2E3A4B',
+                    fontWeight: 'bold'
+                  }}>
+                    Chemie
+                  </label>
+                  <select
+                    value={chemistry}
+                    onChange={(e) => setChemistry(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      background: 'white',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="LiPo">LiPo</option>
+                    <option value="Li-Ion">Li-Ion</option>
+                    <option value="NiMH">NiMH</option>
+                    <option value="Lead-Acid">Lead-Acid</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#2E3A4B',
-                  fontWeight: 'bold'
-                }}>
-                  Capacity (mAh)
-                </label>
-                <input
-                  type="number"
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
-                  placeholder="3830"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    fontSize: '1rem',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '10px',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                />
+
+              {/* Current Status */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                marginBottom: '2rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#2E3A4B',
+                    fontWeight: 'bold'
+                  }}>
+                    Aktueller Ladestand (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={currentCharge}
+                    onChange={(e) => setCurrentCharge(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#2E3A4B',
+                    fontWeight: 'bold'
+                  }}>
+                    Akku-Gesundheit (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={health}
+                    onChange={(e) => setHealth(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
               </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#2E3A4B',
-                  fontWeight: 'bold'
-                }}>
-                  Chemie
-                </label>
-                <select
-                  value={chemistry}
-                  onChange={(e) => setChemistry(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    fontSize: '1rem',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '10px',
-                    outline: 'none',
-                    background: 'white',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  <option value="LiPo">LiPo</option>
-                  <option value="Li-Ion">Li-Ion</option>
-                  <option value="NiMH">NiMH</option>
-                  <option value="Lead-Acid">Lead-Acid</option>
-                </select>
+
+              <div style={{
+                background: '#FFF8F3',
+                padding: '1rem',
+                borderRadius: '10px',
+                marginBottom: '2rem'
+              }}>
+                <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>
+                  💡 <strong>Tipp:</strong> Wenn nicht angegeben, werden automatisch 100% Ladestand und 100% Gesundheit gesetzt.
+                </p>
               </div>
             </div>
           )}
