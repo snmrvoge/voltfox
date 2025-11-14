@@ -1,17 +1,20 @@
-// src/components/DeviceWizard.tsx - v1.1.0
-// Force rebuild - fixed TypeScript errors
+// src/components/DeviceWizard.tsx - v1.1.1
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Camera, Edit3, ArrowRight, ArrowLeft, Check, Plus, Sparkles, Battery, Save, Info, DollarSign, Zap } from 'lucide-react';
+import { Search, Camera, Edit3, ArrowRight, ArrowLeft, Check, Plus, Sparkles, Battery, Save, Info, DollarSign, Zap, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../config/firebase';
 import toast from 'react-hot-toast';
 
 interface DeviceWizardProps {
   onCommunitySearch: () => void;
   onCameraCapture: () => void;
   onComplete?: () => void;
+  capturedImageUrl?: string;
+  aiAnalysisData?: any;
 }
 
 type WizardStep = 'choose-method' | 'minimal-info' | 'save-or-continue' | 'details' | 'multiple-batteries';
@@ -45,6 +48,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   const [deviceName, setDeviceName] = useState('');
   const [deviceIcon, setDeviceIcon] = useState('🔋');
   const [deviceType, setDeviceType] = useState('other');
+  const [deviceImageUrl, setDeviceImageUrl] = useState('');
 
   // Current status
   const [currentCharge, setCurrentCharge] = useState('100');
@@ -60,6 +64,10 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   // Multiple batteries
   const [batteryOption, setBatteryOption] = useState<'single' | 'multiple' | 'drone-controller' | 'mixed'>('single');
   const [batteryCount, setBatteryCount] = useState(1);
+
+  // Photo upload
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   // Insurance (optional)
   const [showInsurance, setShowInsurance] = useState(false);
@@ -95,6 +103,53 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
     });
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) {
+      if (!currentUser) toast.error('Bitte erst anmelden');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Bild darf maximal 5MB groß sein');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Bitte nur Bilddateien hochladen');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to Firebase
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const storagePath = `device-images/${currentUser.uid}/new/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+
+      setDeviceImageUrl(url);
+      setDeviceIcon(''); // Clear icon wenn Foto hochgeladen wurde
+      toast.success('📸 Foto hochgeladen!');
+    } catch (error: any) {
+      console.error('Photo upload error:', error);
+      toast.error('Fehler beim Hochladen');
+      setPhotoPreview(null);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleMinimalSave = async () => {
     if (!deviceName.trim()) {
       toast.error('Bitte gib einen Namen ein');
@@ -112,7 +167,8 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
     try {
       const deviceData: any = {
         name: deviceName,
-        icon: deviceIcon,
+        icon: deviceImageUrl ? '' : deviceIcon,
+        imageUrl: deviceImageUrl || '',
         type: deviceType,
         brand: '',
         model: '',
@@ -330,6 +386,32 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
             </select>
           </div>
 
+          {/* Photo Upload (Optional) */}
+          <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#F0F9FF', borderRadius: '12px', border: '2px dashed #3B82F6' }}>
+            <label style={{ display: 'block', marginBottom: '1rem', color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem' }}>📸 Foto hochladen (optional)</label>
+
+            {photoPreview || deviceImageUrl ? (
+              <div style={{ position: 'relative', textAlign: 'center' }}>
+                <img src={photoPreview || deviceImageUrl} alt="Preview"
+                  style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '12px', objectFit: 'cover', marginBottom: '1rem' }} />
+                <button type="button" onClick={() => { setPhotoPreview(null); setDeviceImageUrl(''); }}
+                  style={{ position: 'absolute', top: '10px', right: 'calc(50% - 110px)', background: '#EF4444', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                  <X size={20} />
+                </button>
+              </div>
+            ) : (
+              <label style={{ display: 'block', padding: '2rem', background: 'white', border: '2px dashed #3B82F6', borderRadius: '12px', textAlign: 'center', cursor: uploadingPhoto ? 'not-allowed' : 'pointer', transition: 'all 0.3s' }}>
+                <Upload size={32} style={{ margin: '0 auto 0.5rem', color: '#3B82F6' }} />
+                <p style={{ color: '#3B82F6', margin: 0, fontWeight: 600 }}>
+                  {uploadingPhoto ? 'Wird hochgeladen...' : 'Klicke zum Hochladen'}
+                </p>
+                <p style={{ color: '#666', fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>Max. 5MB</p>
+                <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto}
+                  style={{ display: 'none' }} />
+              </label>
+            )}
+          </div>
+
           <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
             <button onClick={() => animateStep(() => setCurrentStep('choose-method'))}
               style={{ flex: 1, padding: '1rem', background: '#E5E7EB', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s' }}
@@ -353,7 +435,12 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
       {/* Step 3: Save or Continue */}
       {currentStep === 'save-or-continue' && (
         <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'bounce 1s' }}>{deviceIcon}</div>
+          {deviceImageUrl ? (
+            <img src={deviceImageUrl} alt={deviceName}
+              style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '20px', objectFit: 'cover', margin: '0 auto 1rem', display: 'block', animation: 'bounce 1s' }} />
+          ) : (
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'bounce 1s' }}>{deviceIcon}</div>
+          )}
           <h2 style={{ color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '2rem' }}>🎉 Perfekt!</h2>
           <h3 style={{ color: '#666', marginBottom: '2rem', fontWeight: 'normal', fontSize: '1.3rem' }}>"{deviceName}" ist bereit zum Speichern</h3>
 
