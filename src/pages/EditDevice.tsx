@@ -62,6 +62,7 @@ const EditDevice: React.FC = () => {
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
   const [showUsageInfo, setShowUsageInfo] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [warrantyPeriod, setWarrantyPeriod] = useState<'3months' | '6months' | '1year' | '2years' | 'custom'>('1year');
 
   // Autocomplete suggestions
   const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
@@ -152,6 +153,30 @@ const EditDevice: React.FC = () => {
       setModelSuggestions([]);
     }
   }, [formData.brand, communityDevices]);
+
+  const calculateWarrantyEndDate = (startDate: string, period: string): string => {
+    if (!startDate) return '';
+    const date = new Date(startDate);
+
+    switch (period) {
+      case '3months':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case '6months':
+        date.setMonth(date.getMonth() + 6);
+        break;
+      case '1year':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+      case '2years':
+        date.setFullYear(date.getFullYear() + 2);
+        break;
+      default:
+        return '';
+    }
+
+    return date.toISOString().split('T')[0];
+  };
 
   const deviceTypes = [
     'drone',
@@ -1290,21 +1315,82 @@ const EditDevice: React.FC = () => {
               </div>
 
               <div className="form-group">
+                <label>Kaufdatum</label>
+                <input
+                  type="date"
+                  value={formData.purchaseDate}
+                  onChange={(e) => {
+                    setFormData({ ...formData, purchaseDate: e.target.value });
+                    if (warrantyPeriod !== 'custom') {
+                      setFormData({ ...formData, purchaseDate: e.target.value, warrantyUntil: calculateWarrantyEndDate(e.target.value, warrantyPeriod) });
+                    }
+                  }}
+                />
+              </div>
+
+              {formData.purchaseDate && (
+                <div className="form-group">
+                  <label>Garantiedauer</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.5rem' }}>
+                    {[
+                      { value: '3months', label: '3 Monate' },
+                      { value: '6months', label: '6 Monate' },
+                      { value: '1year', label: '1 Jahr' },
+                      { value: '2years', label: '2 Jahre' },
+                      { value: 'custom', label: 'Individuell' }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setWarrantyPeriod(option.value as any);
+                          if (option.value !== 'custom') {
+                            setFormData({ ...formData, warrantyUntil: calculateWarrantyEndDate(formData.purchaseDate, option.value) });
+                          }
+                        }}
+                        style={{
+                          padding: '0.75rem',
+                          background: warrantyPeriod === option.value ? 'var(--vf-primary)' : 'white',
+                          color: warrantyPeriod === option.value ? 'white' : 'var(--vf-primary)',
+                          border: `2px solid var(--vf-primary)`,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontWeight: warrantyPeriod === option.value ? 'bold' : 'normal',
+                          transition: 'all 0.3s'
+                        }}>
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {warrantyPeriod === 'custom' && formData.purchaseDate && (
+                <div className="form-group">
+                  <label>Garantie bis</label>
+                  <input
+                    type="date"
+                    value={formData.warrantyUntil}
+                    onChange={(e) => setFormData({ ...formData, warrantyUntil: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {formData.warrantyUntil && (
+                <div style={{ padding: '1rem', background: '#DBEAFE', borderRadius: '8px', border: '1px solid var(--vf-primary)', marginBottom: '1rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#1E40AF' }}>
+                    ✅ Garantie bis: <strong>{new Date(formData.warrantyUntil).toLocaleDateString('de-CH', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
+                  </p>
+                </div>
+              )}
+
+              <div className="form-group">
                 <label>Seriennummer</label>
                 <input
                   type="text"
                   value={formData.serialNumber}
                   onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
                   placeholder="SN123456789"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Garantie bis</label>
-                <input
-                  type="date"
-                  value={formData.warrantyUntil}
-                  onChange={(e) => setFormData({ ...formData, warrantyUntil: e.target.value })}
                 />
               </div>
             </div>
