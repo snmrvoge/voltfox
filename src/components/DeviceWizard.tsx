@@ -1,7 +1,7 @@
-// src/components/DeviceWizard.tsx
+// src/components/DeviceWizard.tsx - v1.1.0
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Camera, Edit3, ArrowRight, ArrowLeft, Check, Plus, Sparkles, Battery, Save, X } from 'lucide-react';
+import { Search, Camera, Edit3, ArrowRight, ArrowLeft, Check, Plus, Sparkles, Battery, Save, Info, DollarSign, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,7 @@ interface DeviceWizardProps {
   onComplete?: () => void;
 }
 
-type WizardStep = 'choose-method' | 'minimal-info' | 'save-or-continue' | 'battery-details' | 'extra-batteries' | 'insurance' | 'complete';
+type WizardStep = 'choose-method' | 'minimal-info' | 'save-or-continue' | 'details';
 
 const successSound = () => {
   const audio = new Audio('data:audio/wav;base64,UklGRhIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQA=');
@@ -40,27 +40,27 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   const [currentStep, setCurrentStep] = useState<WizardStep>('choose-method');
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Minimal device data
+  // Device data
   const [deviceName, setDeviceName] = useState('');
   const [deviceIcon, setDeviceIcon] = useState('🔋');
   const [deviceType, setDeviceType] = useState('other');
 
-  // Optional battery details
-  const [hasVoltage, setHasVoltage] = useState(false);
+  // Current status
+  const [currentCharge, setCurrentCharge] = useState('100');
+  const [health, setHealth] = useState('100');
+  const [showHealthInfo, setShowHealthInfo] = useState(false);
+
+  // Advanced (optional)
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [voltage, setVoltage] = useState('');
   const [capacity, setCapacity] = useState('');
   const [chemistry, setChemistry] = useState('LiPo');
-  const [currentCharge, setCurrentCharge] = useState('100');
-  const [health, setHealth] = useState('100');
 
-  // Extra batteries
-  const [hasExtraBatteries, setHasExtraBatteries] = useState(false);
-  const [extraBatteryCount, setExtraBatteryCount] = useState(1);
-
-  // Insurance
-  const [hasInsurance, setHasInsurance] = useState(false);
+  // Insurance (optional)
+  const [showInsurance, setShowInsurance] = useState(false);
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [warrantyUntil, setWarrantyUntil] = useState('');
 
   const deviceIcons = ['🔋', '⚡', '🔌', '📱', '💻', '🎧', '📷', '🎮', '⌚', '🚁', '🚲', '🏎️', '🚗', '🔊', '🎵', '💡', '🔦', '⏰'];
   const deviceTypes = ['drone', 'camera', 'laptop', 'phone', 'tablet', 'smartwatch', 'headphones', 'speaker', 'e-bike', 'rc-car', 'other'];
@@ -95,7 +95,6 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
       toast.error('Bitte gib einen Namen ein');
       return;
     }
-
     animateStep(() => {
       setCurrentStep('save-or-continue');
       successSound();
@@ -121,30 +120,28 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
         reminderFrequency: 30
       };
 
-      if (hasVoltage && voltage && capacity) {
+      if (showAdvanced && voltage && capacity) {
         deviceData.voltage = parseFloat(voltage);
         deviceData.capacity = parseFloat(capacity);
       }
 
-      if (hasInsurance && purchasePrice && purchaseDate) {
-        deviceData.purchasePrice = parseFloat(purchasePrice);
-        deviceData.purchaseDate = purchaseDate;
+      if (showInsurance) {
+        if (purchasePrice) deviceData.purchasePrice = parseFloat(purchasePrice);
+        if (purchaseDate) deviceData.purchaseDate = purchaseDate;
+        if (warrantyUntil) deviceData.warrantyUntil = warrantyUntil;
       }
 
       await addDevice(deviceData);
-
       successSound();
       toast.success('🎉 Gerät erfolgreich hinzugefügt!');
 
       setTimeout(() => {
         if (addMore) {
-          // Reset and start over
           resetWizard();
         } else {
           navigate('/devices');
         }
       }, 1000);
-
     } catch (error) {
       console.error('Error adding device:', error);
       toast.error('Fehler beim Speichern');
@@ -156,24 +153,10 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
     setDeviceName('');
     setDeviceIcon('🔋');
     setDeviceType('other');
-    setHasVoltage(false);
-    setVoltage('');
-    setCapacity('');
-    setHasExtraBatteries(false);
-    setHasInsurance(false);
-  };
-
-  const getStepNumber = () => {
-    const steps = {
-      'choose-method': 1,
-      'minimal-info': 2,
-      'save-or-continue': 3,
-      'battery-details': 4,
-      'extra-batteries': 5,
-      'insurance': 6,
-      'complete': 7
-    };
-    return steps[currentStep] || 1;
+    setCurrentCharge('100');
+    setHealth('100');
+    setShowAdvanced(false);
+    setShowInsurance(false);
   };
 
   return (
@@ -231,39 +214,6 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
         }
       `}</style>
 
-      {/* Progress Indicator */}
-      {currentStep !== 'choose-method' && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginBottom: '2rem'
-        }}>
-          {[1, 2, 3].map((step) => (
-            <React.Fragment key={step}>
-              <div style={{
-                width: '35px',
-                height: '35px',
-                borderRadius: '50%',
-                background: getStepNumber() >= step + 1 ? '#10B981' : getStepNumber() === step ? '#FF6B35' : '#E5E7EB',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '0.9rem',
-                transition: 'all 0.3s',
-                animation: getStepNumber() === step ? 'pulse 2s infinite' : 'none'
-              }}>
-                {getStepNumber() >= step + 1 ? <Check size={18} /> : step}
-              </div>
-              {step < 3 && <div style={{ width: '40px', height: '3px', background: getStepNumber() > step ? '#10B981' : '#E5E7EB', transition: 'all 0.3s' }} />}
-            </React.Fragment>
-          ))}
-        </div>
-      )}
-
       {/* Step 1: Choose Method */}
       {currentStep === 'choose-method' && (
         <div className="wizard-card">
@@ -286,297 +236,81 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '1.5rem'
           }}>
-            {/* Community Search */}
-            <button
-              onClick={() => handleMethodSelect('community')}
-              style={{
-                padding: '2rem',
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                textAlign: 'center',
-                position: 'relative',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
-                color: 'white'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(255, 255, 255, 0.3)',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 'bold'
-              }}>
-                ⚡ Schnellste
-              </div>
+            {/* Community */}
+            <button onClick={() => handleMethodSelect('community')} style={{
+              padding: '2rem', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s',
+              textAlign: 'center', position: 'relative', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', color: 'white'
+            }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.4)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)'; }}>
+              <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255, 255, 255, 0.3)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>⚡ Schnellste</div>
               <Search size={56} style={{ margin: '0 auto 1rem', animation: 'bounce 2s infinite' }} />
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>
-                Community durchsuchen
-              </h3>
-              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>
-                Gerät aus Datenbank wählen - fertig!
-              </p>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}>
-                Nur 1 Klick <ArrowRight size={22} />
-              </div>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>Community durchsuchen</h3>
+              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>Gerät aus Datenbank wählen - fertig!</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>Nur 1 Klick <ArrowRight size={22} /></div>
             </button>
 
-            {/* Camera Capture */}
-            <button
-              onClick={() => handleMethodSelect('camera')}
-              style={{
-                padding: '2rem',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                textAlign: 'center',
-                position: 'relative',
-                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
-                color: 'white'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(59, 130, 246, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(255, 255, 255, 0.3)',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 'bold'
-              }}>
-                🤖 Smart
-              </div>
+            {/* Camera */}
+            <button onClick={() => handleMethodSelect('camera')} style={{
+              padding: '2rem', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+              border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s',
+              textAlign: 'center', position: 'relative', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)', color: 'white'
+            }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(59, 130, 246, 0.4)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)'; }}>
+              <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255, 255, 255, 0.3)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>🤖 Smart</div>
               <Camera size={56} style={{ margin: '0 auto 1rem', animation: 'bounce 2s infinite 0.5s' }} />
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>
-                Mit KI-Foto
-              </h3>
-              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>
-                Foto machen - KI erkennt alles automatisch
-              </p>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}>
-                ~30 Sekunden <Sparkles size={22} />
-              </div>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>Mit KI-Foto</h3>
+              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>Foto machen - KI erkennt alles automatisch</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>~30 Sekunden <Sparkles size={22} /></div>
             </button>
 
-            {/* Manual Entry */}
-            <button
-              onClick={() => handleMethodSelect('manual')}
-              style={{
-                padding: '2rem',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #F97316 100%)',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                textAlign: 'center',
-                position: 'relative',
-                boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)',
-                color: 'white'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 107, 53, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.3)';
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(255, 255, 255, 0.3)',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 'bold'
-              }}>
-                ✨ Flexibel
-              </div>
+            {/* Manual */}
+            <button onClick={() => handleMethodSelect('manual')} style={{
+              padding: '2rem', background: 'linear-gradient(135deg, #FF6B35 0%, #F97316 100%)',
+              border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s',
+              textAlign: 'center', position: 'relative', boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)', color: 'white'
+            }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 107, 53, 0.4)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.3)'; }}>
+              <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255, 255, 255, 0.3)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>✨ Flexibel</div>
               <Edit3 size={56} style={{ margin: '0 auto 1rem', animation: 'bounce 2s infinite 1s' }} />
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>
-                Manuell eingeben
-              </h3>
-              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>
-                Start schnell - Details später hinzufügen
-              </p>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}>
-                Volle Kontrolle <Edit3 size={22} />
-              </div>
+              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.4rem' }}>Manuell eingeben</h3>
+              <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '1rem' }}>Start schnell - Details später hinzufügen</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>Volle Kontrolle <Edit3 size={22} /></div>
             </button>
           </div>
 
-          <div style={{
-            textAlign: 'center',
-            marginTop: '3rem',
-            padding: '1.5rem',
-            background: '#FFF8F3',
-            borderRadius: '15px',
-            border: '2px solid #FFD23F',
-            animation: 'slideIn 1s'
-          }}>
-            <p style={{ color: '#666', margin: 0, fontSize: '1.05rem' }}>
-              💡 <strong>Tipp:</strong> Du kannst später jederzeit weitere Details hinzufügen!
-            </p>
+          <div style={{ textAlign: 'center', marginTop: '3rem', padding: '1.5rem', background: '#FFF8F3', borderRadius: '15px', border: '2px solid #FFD23F', animation: 'slideIn 1s' }}>
+            <p style={{ color: '#666', margin: 0, fontSize: '1.05rem' }}>💡 <strong>Tipp:</strong> Du kannst später jederzeit weitere Details hinzufügen!</p>
           </div>
         </div>
       )}
 
-      {/* Step 2: Minimal Info (Name + Icon) */}
+      {/* Step 2: Minimal Info */}
       {currentStep === 'minimal-info' && (
-        <div className="wizard-card" style={{
-          background: 'white',
-          padding: '3rem 2rem',
-          borderRadius: '20px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{
-            textAlign: 'center',
-            color: '#2E3A4B',
-            marginBottom: '0.5rem',
-            fontSize: '1.8rem'
-          }}>
-            ⚡ Super! Wie heißt dein Gerät?
-          </h2>
-          <p style={{
-            textAlign: 'center',
-            color: '#666',
-            marginBottom: '2rem'
-          }}>
-            Gib einen einfachen Namen ein - das reicht schon!
-          </p>
+        <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ textAlign: 'center', color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '1.8rem' }}>⚡ Super! Wie heißt dein Gerät?</h2>
+          <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>Gib einen einfachen Namen ein - das reicht schon!</p>
 
-          {/* Device Name */}
           <div style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#2E3A4B',
-              fontWeight: 'bold',
-              fontSize: '1.1rem'
-            }}>
-              📝 Gerätename *
-            </label>
-            <input
-              type="text"
-              value={deviceName}
-              onChange={(e) => setDeviceName(e.target.value)}
-              placeholder="z.B. DJI Mavic 3, iPhone 14, E-Bike..."
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '1rem',
-                fontSize: '1.1rem',
-                border: '2px solid #E5E7EB',
-                borderRadius: '12px',
-                outline: 'none',
-                transition: 'all 0.3s',
-                boxSizing: 'border-box'
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#FF6B35'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
-            />
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem' }}>📝 Gerätename *</label>
+            <input type="text" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} placeholder="z.B. DJI Mavic 3, iPhone 14, E-Bike..." autoFocus
+              style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', border: '2px solid #E5E7EB', borderRadius: '12px', outline: 'none', transition: 'all 0.3s', boxSizing: 'border-box' }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#FF6B35'} onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'} />
           </div>
 
-          {/* Icon Selector */}
           <div style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#2E3A4B',
-              fontWeight: 'bold',
-              fontSize: '1.1rem'
-            }}>
-              😊 Wähle ein Icon (optional)
-            </label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem' }}>😊 Wähle ein Icon (optional)</label>
             <div className="icon-selector">
               {deviceIcons.map((icon) => (
-                <div
-                  key={icon}
-                  className={`icon-option ${deviceIcon === icon ? 'selected' : ''}`}
-                  onClick={() => {
-                    setDeviceIcon(icon);
-                    clickSound();
-                  }}
-                >
-                  {icon}
-                </div>
+                <div key={icon} className={`icon-option ${deviceIcon === icon ? 'selected' : ''}`} onClick={() => { setDeviceIcon(icon); clickSound(); }}>{icon}</div>
               ))}
             </div>
           </div>
 
-          {/* Device Type */}
           <div style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#2E3A4B',
-              fontWeight: 'bold',
-              fontSize: '1.1rem'
-            }}>
-              🏷️ Geräte-Typ (optional)
-            </label>
-            <select
-              value={deviceType}
-              onChange={(e) => setDeviceType(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                fontSize: '1.1rem',
-                border: '2px solid #E5E7EB',
-                borderRadius: '12px',
-                outline: 'none',
-                background: 'white',
-                cursor: 'pointer',
-                boxSizing: 'border-box'
-              }}
-            >
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem' }}>🏷️ Geräte-Typ (optional)</label>
+            <select value={deviceType} onChange={(e) => setDeviceType(e.target.value)}
+              style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', border: '2px solid #E5E7EB', borderRadius: '12px', outline: 'none', background: 'white', cursor: 'pointer', boxSizing: 'border-box' }}>
               <option value="other">Andere</option>
               <option value="drone">Drohne</option>
               <option value="camera">Kamera</option>
@@ -591,374 +325,152 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
             </select>
           </div>
 
-          {/* Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            marginTop: '2rem'
-          }}>
-            <button
-              onClick={() => animateStep(() => setCurrentStep('choose-method'))}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                background: '#E5E7EB',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}
-            >
-              <ArrowLeft size={20} />
-              Zurück
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+            <button onClick={() => animateStep(() => setCurrentStep('choose-method'))}
+              style={{ flex: 1, padding: '1rem', background: '#E5E7EB', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'} onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}>
+              <ArrowLeft size={20} /> Zurück
             </button>
-            <button
-              onClick={handleMinimalSave}
-              disabled={!deviceName.trim()}
-              style={{
-                flex: 2,
-                padding: '1rem',
-                background: deviceName.trim() ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : '#D1D5DB',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: deviceName.trim() ? 'pointer' : 'not-allowed',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s',
-                boxShadow: deviceName.trim() ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
-              }}
-              onMouseOver={(e) => {
-                if (deviceName.trim()) {
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-                }
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = deviceName.trim() ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none';
-              }}
-            >
-              Weiter
-              <ArrowRight size={20} />
+            <button onClick={handleMinimalSave} disabled={!deviceName.trim()}
+              style={{ flex: 2, padding: '1rem', background: deviceName.trim() ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : '#D1D5DB', color: 'white', border: 'none', borderRadius: '12px', cursor: deviceName.trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s', boxShadow: deviceName.trim() ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none' }}
+              onMouseOver={(e) => { if (deviceName.trim()) { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)'; } }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = deviceName.trim() ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'; }}>
+              Weiter <ArrowRight size={20} />
             </button>
           </div>
 
-          <div style={{
-            textAlign: 'center',
-            marginTop: '2rem',
-            padding: '1rem',
-            background: '#FFF8F3',
-            borderRadius: '10px'
-          }}>
-            <p style={{ color: '#666', margin: 0 }}>
-              💡 Im nächsten Schritt kannst du direkt speichern oder Details hinzufügen.
-            </p>
+          <div style={{ textAlign: 'center', marginTop: '2rem', padding: '1rem', background: '#FFF8F3', borderRadius: '10px' }}>
+            <p style={{ color: '#666', margin: 0 }}>💡 Im nächsten Schritt kannst du direkt speichern oder Details hinzufügen.</p>
           </div>
         </div>
       )}
 
       {/* Step 3: Save or Continue */}
       {currentStep === 'save-or-continue' && (
-        <div className="wizard-card" style={{
-          background: 'white',
-          padding: '3rem 2rem',
-          borderRadius: '20px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '4rem',
-            marginBottom: '1rem',
-            animation: 'bounce 1s'
-          }}>
-            {deviceIcon}
+        <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'bounce 1s' }}>{deviceIcon}</div>
+          <h2 style={{ color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '2rem' }}>🎉 Perfekt!</h2>
+          <h3 style={{ color: '#666', marginBottom: '2rem', fontWeight: 'normal', fontSize: '1.3rem' }}>"{deviceName}" ist bereit zum Speichern</h3>
+
+          <div style={{ background: '#F0FDF4', padding: '1.5rem', borderRadius: '15px', border: '2px solid #10B981', marginBottom: '2rem' }}>
+            <p style={{ color: '#059669', margin: 0, fontSize: '1.1rem' }}>✓ Gerät ist einsatzbereit<br/>✓ Batterie-Überwachung aktiv<br/>✓ Benachrichtigungen aktiviert</p>
           </div>
 
-          <h2 style={{
-            color: '#2E3A4B',
-            marginBottom: '0.5rem',
-            fontSize: '2rem'
-          }}>
-            🎉 Perfekt!
-          </h2>
-          <h3 style={{
-            color: '#666',
-            marginBottom: '2rem',
-            fontWeight: 'normal',
-            fontSize: '1.3rem'
-          }}>
-            "{deviceName}" ist bereit zum Speichern
-          </h3>
+          <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>Möchtest du noch Details hinzufügen?</p>
 
-          <div style={{
-            background: '#F0FDF4',
-            padding: '1.5rem',
-            borderRadius: '15px',
-            border: '2px solid #10B981',
-            marginBottom: '2rem'
-          }}>
-            <p style={{ color: '#059669', margin: 0, fontSize: '1.1rem' }}>
-              ✓ Gerät ist einsatzbereit<br/>
-              ✓ Batterie-Überwachung aktiv<br/>
-              ✓ Benachrichtigungen aktiviert
-            </p>
-          </div>
-
-          <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>
-            Möchtest du noch Details hinzufügen?
-          </p>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <button
-              onClick={() => handleFinalSave(false)}
-              style={{
-                padding: '1.5rem',
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '15px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1.2rem',
-                transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-              }}
-            >
-              <Save size={24} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
-              Jetzt speichern
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <button onClick={() => handleFinalSave(false)}
+              style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.2rem', transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)'; }}>
+              <Save size={24} style={{ display: 'block', margin: '0 auto 0.5rem' }} /> Jetzt speichern
             </button>
 
-            <button
-              onClick={() => animateStep(() => setCurrentStep('battery-details'))}
-              style={{
-                padding: '1.5rem',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '15px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1.2rem',
-                transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
-              }}
-            >
-              <Battery size={24} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
-              Details hinzufügen
+            <button onClick={() => animateStep(() => setCurrentStep('details'))}
+              style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.2rem', transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)'; }}>
+              <Battery size={24} style={{ display: 'block', margin: '0 auto 0.5rem' }} /> Details hinzufügen
             </button>
           </div>
 
-          <button
-            onClick={() => handleFinalSave(true)}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              background: 'transparent',
-              color: '#FF6B35',
-              border: '2px solid #FF6B35',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              transition: 'all 0.3s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = '#FF6B35';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#FF6B35';
-            }}
-          >
-            <Plus size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-            Speichern & weiteres Gerät hinzufügen
+          <button onClick={() => handleFinalSave(true)}
+            style={{ width: '100%', padding: '1rem', background: 'transparent', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'all 0.3s' }}
+            onMouseOver={(e) => { e.currentTarget.style.background = '#FF6B35'; e.currentTarget.style.color = 'white'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#FF6B35'; }}>
+            <Plus size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Speichern & weiteres Gerät hinzufügen
           </button>
         </div>
       )}
 
-      {/* Step 4: Battery Details (Optional) */}
-      {currentStep === 'battery-details' && (
-        <div className="wizard-card" style={{
-          background: 'white',
-          padding: '3rem 2rem',
-          borderRadius: '20px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{
-            textAlign: 'center',
-            color: '#2E3A4B',
-            marginBottom: '0.5rem',
-            fontSize: '1.8rem'
-          }}>
-            🔋 Akku-Details (optional)
-          </h2>
-          <p style={{
-            textAlign: 'center',
-            color: '#666',
-            marginBottom: '2rem'
-          }}>
-            Für präzisere Überwachung kannst du Akku-Daten eingeben
-          </p>
+      {/* Step 4: Details (Current Status + Advanced + Insurance) */}
+      {currentStep === 'details' && (
+        <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ textAlign: 'center', color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '1.8rem' }}>📊 Akku-Details</h2>
+          <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>Ergänze Details für bessere Überwachung (alles optional)</p>
 
-          <div style={{
-            background: '#F0FDF4',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            marginBottom: '2rem',
-            cursor: 'pointer',
-            border: hasVoltage ? '2px solid #10B981' : '2px solid #E5E7EB',
-            transition: 'all 0.3s'
-          }}
-          onClick={() => {
-            setHasVoltage(!hasVoltage);
-            clickSound();
-          }}
-          >
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem',
-              cursor: 'pointer'
-            }}>
-              <input
-                type="checkbox"
-                checked={hasVoltage}
-                onChange={(e) => setHasVoltage(e.target.checked)}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span style={{
-                color: '#2E3A4B',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}>
-                Ich kenne die Akku-Daten
-              </span>
+          {/* Current Status */}
+          <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+            <h3 style={{ color: '#2E3A4B', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Battery size={20} /> Aktueller Status
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Ladestand (%)</label>
+                <input type="number" min="0" max="100" value={currentCharge} onChange={(e) => setCurrentCharge(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Gesundheit (%)
+                  <div style={{ position: 'relative' }}>
+                    <Info size={16} style={{ cursor: 'pointer', color: '#3B82F6' }}
+                      onClick={() => setShowHealthInfo(!showHealthInfo)}
+                      onMouseEnter={() => setShowHealthInfo(true)}
+                      onMouseLeave={() => setShowHealthInfo(false)} />
+                    {showHealthInfo && (
+                      <div style={{
+                        position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                        background: 'white', padding: '1rem', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                        width: '280px', marginBottom: '10px', zIndex: 1000, border: '2px solid #3B82F6'
+                      }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#2E3A4B', fontSize: '0.9rem' }}>💚 Akku-Gesundheit</h4>
+                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: '#666' }}>
+                          Die Gesundheit zeigt die maximale Kapazität im Vergleich zum Neuzustand.
+                        </p>
+                        <div style={{ fontSize: '0.8rem', lineHeight: '1.6', color: '#666' }}>
+                          <div>100% = Wie neu</div>
+                          <div>80-99% = Gut</div>
+                          <div>60-79% = Mittel</div>
+                          <div>&lt;60% = Ersatz empfohlen</div>
+                        </div>
+                        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #E5E7EB', fontSize: '0.75rem', color: '#999' }}>
+                          Bei neuem Akku: 100%<br/>
+                          Nach 1-2 Jahren: ~90%<br/>
+                          Nach 3-4 Jahren: ~75%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </label>
+                <input type="number" min="0" max="100" value={health} onChange={(e) => setHealth(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Specs Toggle */}
+          <div style={{ background: '#FFF8F3', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem', cursor: 'pointer', border: showAdvanced ? '2px solid #FF6B35' : '2px solid #E5E7EB', transition: 'all 0.3s' }}
+            onClick={() => { setShowAdvanced(!showAdvanced); clickSound(); }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showAdvanced} onChange={(e) => setShowAdvanced(e.target.checked)}
+                style={{ width: '24px', height: '24px', cursor: 'pointer' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Zap size={20} /> Technische Daten (Advanced)
+                </div>
+                <div style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.25rem' }}>Voltage, Capacity, Chemie - für Experten</div>
+              </div>
             </label>
           </div>
 
-          {hasVoltage && (
-            <div style={{ animation: 'slideIn 0.5s' }}>
-              {/* Technical Specs */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '1rem',
-                marginBottom: '1.5rem'
-              }}>
+          {showAdvanced && (
+            <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem', animation: 'slideIn 0.5s' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#2E3A4B',
-                    fontWeight: 'bold'
-                  }}>
-                    Voltage (V)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={voltage}
-                    onChange={(e) => setVoltage(e.target.value)}
-                    placeholder="11.1"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '10px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Voltage (V)</label>
+                  <input type="number" step="0.1" value={voltage} onChange={(e) => setVoltage(e.target.value)} placeholder="11.1"
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#2E3A4B',
-                    fontWeight: 'bold'
-                  }}>
-                    Capacity (mAh)
-                  </label>
-                  <input
-                    type="number"
-                    value={capacity}
-                    onChange={(e) => setCapacity(e.target.value)}
-                    placeholder="3830"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '10px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Capacity (mAh)</label>
+                  <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="3830"
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#2E3A4B',
-                    fontWeight: 'bold'
-                  }}>
-                    Chemie
-                  </label>
-                  <select
-                    value={chemistry}
-                    onChange={(e) => setChemistry(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '10px',
-                      outline: 'none',
-                      background: 'white',
-                      cursor: 'pointer',
-                      boxSizing: 'border-box'
-                    }}
-                  >
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Chemie</label>
+                  <select value={chemistry} onChange={(e) => setChemistry(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', background: 'white', cursor: 'pointer', boxSizing: 'border-box' }}>
                     <option value="LiPo">LiPo</option>
                     <option value="Li-Ion">Li-Ion</option>
                     <option value="NiMH">NiMH</option>
@@ -966,138 +478,63 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
                   </select>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Current Status */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '1rem',
-                marginBottom: '2rem'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#2E3A4B',
-                    fontWeight: 'bold'
-                  }}>
-                    Aktueller Ladestand (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={currentCharge}
-                    onChange={(e) => setCurrentCharge(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '10px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+          {/* Insurance Toggle */}
+          <div style={{ background: '#F0F9FF', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem', cursor: 'pointer', border: showInsurance ? '2px solid #3B82F6' : '2px solid #E5E7EB', transition: 'all 0.3s' }}
+            onClick={() => { setShowInsurance(!showInsurance); clickSound(); }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showInsurance} onChange={(e) => setShowInsurance(e.target.checked)}
+                style={{ width: '24px', height: '24px', cursor: 'pointer' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#2E3A4B', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <DollarSign size={20} /> Versicherung & Garantie
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#2E3A4B',
-                    fontWeight: 'bold'
-                  }}>
-                    Akku-Gesundheit (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={health}
-                    onChange={(e) => setHealth(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      border: '2px solid #E5E7EB',
-                      borderRadius: '10px',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
+                <div style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.25rem' }}>Kaufpreis, Garantie - für Versicherungsschutz</div>
               </div>
+            </label>
+          </div>
 
-              <div style={{
-                background: '#FFF8F3',
-                padding: '1rem',
-                borderRadius: '10px',
-                marginBottom: '2rem'
-              }}>
-                <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>
-                  💡 <strong>Tipp:</strong> Wenn nicht angegeben, werden automatisch 100% Ladestand und 100% Gesundheit gesetzt.
+          {showInsurance && (
+            <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem', animation: 'slideIn 0.5s' }}>
+              <div style={{ background: '#DBEAFE', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #3B82F6' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#1E40AF' }}>
+                  <strong>✅ Vorteile:</strong> Versicherungsschutz • Wertermittlung • Garantie-Tracking
                 </p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Kaufpreis (CHF)</label>
+                  <input type="number" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder="1500"
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Kaufdatum</label>
+                  <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold' }}>Garantie bis</label>
+                  <input type="date" value={warrantyUntil} onChange={(e) => setWarrantyUntil(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
               </div>
             </div>
           )}
 
-          <div style={{
-            display: 'flex',
-            gap: '1rem'
-          }}>
-            <button
-              onClick={() => animateStep(() => setCurrentStep('save-or-continue'))}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                background: '#E5E7EB',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}
-            >
-              <ArrowLeft size={20} />
-              Zurück
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button onClick={() => animateStep(() => setCurrentStep('save-or-continue'))}
+              style={{ flex: 1, padding: '1rem', background: '#E5E7EB', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'} onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}>
+              <ArrowLeft size={20} /> Zurück
             </button>
-            <button
-              onClick={() => handleFinalSave(false)}
-              style={{
-                flex: 2,
-                padding: '1rem',
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-              }}
-            >
-              <Save size={20} />
-              Gerät speichern
+            <button onClick={() => handleFinalSave(false)}
+              style={{ flex: 2, padding: '1rem', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)'; }}>
+              <Save size={20} /> Gerät speichern
             </button>
           </div>
         </div>
