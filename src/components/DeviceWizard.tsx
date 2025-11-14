@@ -14,7 +14,7 @@ interface DeviceWizardProps {
   onComplete?: () => void;
 }
 
-type WizardStep = 'choose-method' | 'minimal-info' | 'save-or-continue' | 'details';
+type WizardStep = 'choose-method' | 'minimal-info' | 'save-or-continue' | 'details' | 'multiple-batteries';
 
 const successSound = () => {
   const audio = new Audio('data:audio/wav;base64,UklGRhIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQA=');
@@ -56,6 +56,10 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
   const [voltage, setVoltage] = useState('');
   const [capacity, setCapacity] = useState('');
   const [chemistry, setChemistry] = useState('LiPo');
+
+  // Multiple batteries
+  const [batteryOption, setBatteryOption] = useState<'single' | 'multiple' | 'drone-controller' | 'mixed'>('single');
+  const [batteryCount, setBatteryCount] = useState(1);
 
   // Insurance (optional)
   const [showInsurance, setShowInsurance] = useState(false);
@@ -367,7 +371,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
               <Save size={24} style={{ display: 'block', margin: '0 auto 0.5rem' }} /> Jetzt speichern
             </button>
 
-            <button onClick={() => animateStep(() => setCurrentStep('details'))}
+            <button onClick={() => animateStep(() => setCurrentStep('multiple-batteries'))}
               style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none', borderRadius: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.2rem', transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}
               onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)'; }}
               onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)'; }}>
@@ -384,7 +388,115 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
         </div>
       )}
 
-      {/* Step 4: Details (Current Status + Advanced + Insurance) */}
+      {/* Step 4: Multiple Batteries */}
+      {currentStep === 'multiple-batteries' && (
+        <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ textAlign: 'center', color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '1.8rem' }}>🔋 Weitere Akkus?</h2>
+          <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>Hat dieses Gerät mehrere Akkus oder Komponenten?</p>
+
+          <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem' }}>
+            {/* Single Battery */}
+            <div onClick={() => { clickSound(); setBatteryOption('single'); }}
+              style={{
+                padding: '1.5rem',
+                background: batteryOption === 'single' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : '#F8FAFC',
+                color: batteryOption === 'single' ? 'white' : '#2E3A4B',
+                border: batteryOption === 'single' ? '3px solid #10B981' : '2px solid #E5E7EB',
+                borderRadius: '15px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: batteryOption === 'single' ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
+              }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>❌</div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Nein, nur ein Akku</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Standard-Setup mit einem einzelnen Akku</div>
+            </div>
+
+            {/* Multiple Same Batteries */}
+            <div onClick={() => { clickSound(); setBatteryOption('multiple'); }}
+              style={{
+                padding: '1.5rem',
+                background: batteryOption === 'multiple' ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' : '#F8FAFC',
+                color: batteryOption === 'multiple' ? 'white' : '#2E3A4B',
+                border: batteryOption === 'multiple' ? '3px solid #3B82F6' : '2px solid #E5E7EB',
+                borderRadius: '15px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: batteryOption === 'multiple' ? '0 4px 15px rgba(59, 130, 246, 0.3)' : 'none'
+              }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, mehrere baugleiche Akkus</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Gleiche Akkus werden gemeinsam verwaltet</div>
+              {batteryOption === 'multiple' && (
+                <div style={{ marginTop: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Anzahl Akkus</label>
+                  <input type="number" min="2" max="10" value={batteryCount} onChange={(e) => setBatteryCount(parseInt(e.target.value) || 2)}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid white', borderRadius: '10px', outline: 'none', boxSizing: 'border-box', background: 'rgba(255,255,255,0.9)', color: '#2E3A4B' }} />
+                </div>
+              )}
+            </div>
+
+            {/* Drone + Controller */}
+            <div onClick={() => { clickSound(); setBatteryOption('drone-controller'); }}
+              style={{
+                padding: '1.5rem',
+                background: batteryOption === 'drone-controller' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' : '#F8FAFC',
+                color: batteryOption === 'drone-controller' ? 'white' : '#2E3A4B',
+                border: batteryOption === 'drone-controller' ? '3px solid #8B5CF6' : '2px solid #E5E7EB',
+                borderRadius: '15px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: batteryOption === 'drone-controller' ? '0 4px 15px rgba(139, 92, 246, 0.3)' : 'none'
+              }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚁</div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, Drohne + Fernsteuerung</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Separate Erfassung von Drohne und Controller</div>
+            </div>
+
+            {/* Mixed Batteries */}
+            <div onClick={() => { clickSound(); setBatteryOption('mixed'); }}
+              style={{
+                padding: '1.5rem',
+                background: batteryOption === 'mixed' ? 'linear-gradient(135deg, #FF6B35 0%, #F97316 100%)' : '#F8FAFC',
+                color: batteryOption === 'mixed' ? 'white' : '#2E3A4B',
+                border: batteryOption === 'mixed' ? '3px solid #FF6B35' : '2px solid #E5E7EB',
+                borderRadius: '15px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: batteryOption === 'mixed' ? '0 4px 15px rgba(255, 107, 53, 0.3)' : 'none'
+              }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.3rem' }}>Ja, verschiedene Akkus</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>z.B. Kamera + Batteriegriff (separate Erfassung)</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button onClick={() => animateStep(() => setCurrentStep('save-or-continue'))}
+              style={{ flex: '1', padding: '1rem', background: '#E5E7EB', color: '#2E3A4B', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'all 0.3s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}>
+              <ArrowLeft size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Zurück
+            </button>
+
+            <button onClick={() => animateStep(() => setCurrentStep('details'))}
+              style={{ flex: '2', padding: '1rem', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)'; }}>
+              Weiter <ArrowRight size={20} style={{ verticalAlign: 'middle', marginLeft: '0.5rem' }} />
+            </button>
+          </div>
+
+          <button onClick={() => handleFinalSave(false)}
+            style={{ width: '100%', padding: '1rem', marginTop: '1rem', background: 'transparent', color: '#10B981', border: '2px solid #10B981', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'all 0.3s' }}
+            onMouseOver={(e) => { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.color = 'white'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#10B981'; }}>
+            <Save size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Jetzt speichern
+          </button>
+        </div>
+      )}
+
+      {/* Step 5: Details (Current Status + Advanced + Insurance) */}
       {currentStep === 'details' && (
         <div className="wizard-card" style={{ background: 'white', padding: '3rem 2rem', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
           <h2 style={{ textAlign: 'center', color: '#2E3A4B', marginBottom: '0.5rem', fontSize: '1.8rem' }}>📊 Akku-Details</h2>
@@ -526,7 +638,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
 
           {/* Buttons */}
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button onClick={() => animateStep(() => setCurrentStep('save-or-continue'))}
+            <button onClick={() => animateStep(() => setCurrentStep('multiple-batteries'))}
               style={{ flex: 1, padding: '1rem', background: '#E5E7EB', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.3s' }}
               onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'} onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}>
               <ArrowLeft size={20} /> Zurück
