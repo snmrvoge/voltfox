@@ -317,6 +317,92 @@ const AddDevice: React.FC = () => {
     setShowBarcodeScanner(false);
   };
 
+  const handlePhotoCapture = async (imageFile: File) => {
+    console.log('Foto aufgenommen:', imageFile);
+    setShowBarcodeScanner(false);
+    setUploadedFile(imageFile);
+
+    // Upload the image first
+    if (!currentUser) {
+      toast.error('Bitte erst anmelden');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${imageFile.name}`;
+      const storagePath = `device-images/${currentUser.uid}/new/${fileName}`;
+
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, imageFile);
+      const url = await getDownloadURL(storageRef);
+
+      setFormData({ ...formData, imageUrl: url, icon: '' });
+      setImageSource('upload');
+
+      toast.success('Bild erfolgreich hochgeladen!');
+
+      // Now analyze with AI
+      await handleAIAnalysisWithFile(imageFile);
+    } catch (error: any) {
+      console.error('Upload Fehler:', error);
+      toast.error('Fehler beim Hochladen');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleAIAnalysisWithFile = async (file: File) => {
+    setIsAnalyzing(true);
+    try {
+      toast.loading('🤖 KI analysiert das Gerät...', { id: 'ai-analysis' });
+
+      const result = await analyzeDeviceImage(file);
+      console.log('AI Analysis Result:', result);
+
+      // Auto-fill form fields with AI results
+      const updates: any = {};
+
+      if (result.deviceName) {
+        updates.name = result.deviceName;
+      } else if (result.brand && result.model) {
+        updates.name = `${result.brand} ${result.model}`;
+      } else if (result.brand) {
+        updates.name = result.brand;
+      }
+
+      if (result.brand) {
+        updates.brand = result.brand;
+      }
+
+      if (result.model) {
+        updates.model = result.model;
+      }
+
+      if (result.deviceType) {
+        updates.type = mapToDeviceType(result.deviceType);
+      }
+
+      if (result.batteryType) {
+        updates.chemistry = result.batteryType;
+      }
+
+      setFormData({ ...formData, ...updates });
+      setAiResult(result);
+
+      toast.success(
+        `✅ Gerät erkannt: ${updates.name || 'Unbekannt'}`,
+        { id: 'ai-analysis', duration: 3000 }
+      );
+    } catch (error: any) {
+      console.error('AI Analysis Error:', error);
+      toast.error(error.message || 'KI-Analyse fehlgeschlagen', { id: 'ai-analysis' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -1217,7 +1303,9 @@ const AddDevice: React.FC = () => {
       {showBarcodeScanner && (
         <BarcodeScanner
           onScanSuccess={handleBarcodeScan}
+          onPhotoCapture={handlePhotoCapture}
           onClose={() => setShowBarcodeScanner(false)}
+          mode="barcode"
         />
       )}
     </div>
