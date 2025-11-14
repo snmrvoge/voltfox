@@ -15,7 +15,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScanSuccess,
   onPhotoCapture,
   onClose,
-  mode = 'barcode'
+  mode = 'object' // Default to object mode
 }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [currentMode, setCurrentMode] = useState<'barcode' | 'object'>(mode);
@@ -132,21 +132,40 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     setIsCapturing(true);
     try {
       const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+
+      // Limit resolution to max 1920x1080 for faster upload
+      const maxWidth = 1920;
+      const maxHeight = 1080;
+      let width = videoRef.current.videoWidth;
+      let height = videoRef.current.videoHeight;
+
+      // Calculate scaling
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
 
       if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
+        ctx.drawImage(videoRef.current, 0, 0, width, height);
 
+        // Compress to 80% quality for faster upload
         canvas.toBlob(async (blob) => {
           if (blob) {
+            console.log('Photo size:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
             const file = new File([blob], `device-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
             await stopScanning();
             onPhotoCapture(file);
             toast.success('📸 Foto aufgenommen!');
           }
-        }, 'image/jpeg', 0.95);
+        }, 'image/jpeg', 0.8); // Reduced from 0.95 to 0.8
       }
     } catch (err) {
       console.error('Foto-Aufnahme-Fehler:', err);

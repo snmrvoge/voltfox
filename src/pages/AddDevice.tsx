@@ -1163,7 +1163,10 @@ const AddDevice: React.FC = () => {
                 >
                   <Camera size={32} style={{ margin: '0 auto 1rem', color: '#10B981' }} />
                   <p style={{ color: '#10B981', fontWeight: 600, margin: 0 }}>
-                    📷 Barcode scannen
+                    📷 Mit Kamera scannen
+                  </p>
+                  <p style={{ color: '#666', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
+                    Objekt oder Barcode
                   </p>
                 </button>
               </div>
@@ -1299,13 +1302,12 @@ const AddDevice: React.FC = () => {
         </button>
       </form>
 
-      {/* Barcode Scanner Modal */}
+      {/* Camera Scanner Modal */}
       {showBarcodeScanner && (
         <BarcodeScanner
           onScanSuccess={handleBarcodeScan}
           onPhotoCapture={handlePhotoCapture}
           onClose={() => setShowBarcodeScanner(false)}
-          mode="barcode"
         />
       )}
     </div>
