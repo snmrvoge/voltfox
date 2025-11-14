@@ -207,11 +207,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signInWithApple() {
     try {
       const result = await signInWithPopup(auth, appleProvider);
-      await createUserProfile(result.user);
-      
+
+      console.log('Apple Sign In successful:', {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL
+      });
+
+      try {
+        await createUserProfile(result.user);
+        console.log('User profile created successfully');
+      } catch (profileError) {
+        console.error('Error creating user profile:', profileError);
+        toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
+        throw profileError;
+      }
+
       toast.success('Welcome to VoltFox! 🦊');
       return result.user;
     } catch (error: any) {
+      console.error('Apple Sign In error:', error);
       handleAuthError(error);
       throw error;
     }
