@@ -48,17 +48,15 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   }, []);
 
   const startBarcodeScanning = async () => {
-    if (!selectedCamera) {
-      toast.error('Bitte wähle eine Kamera');
-      return;
-    }
-
     try {
       const html5QrCode = new Html5Qrcode('barcode-reader');
       scannerRef.current = html5QrCode;
 
+      // Use environment (back) camera or selected camera
+      const cameraId = selectedCamera || { facingMode: 'environment' };
+
       await html5QrCode.start(
-        selectedCamera,
+        cameraId,
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
@@ -83,16 +81,12 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   };
 
   const startCamera = async () => {
-    if (!selectedCamera) {
-      toast.error('Bitte wähle eine Kamera');
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-          facingMode: selectedCamera ? undefined : 'environment',
+          // Always prefer back camera on mobile
+          facingMode: { ideal: 'environment' },
           // Limit resolution from the start
           width: { ideal: 1280, max: 1920 },
           height: { ideal: 720, max: 1080 }
