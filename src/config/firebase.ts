@@ -99,6 +99,13 @@ export { analytics };
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
+
+// Apple provider with custom parameters
 export const appleProvider = new OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
+appleProvider.setCustomParameters({
+  locale: 'de'
+});
 
 export default app;
