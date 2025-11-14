@@ -215,13 +215,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
         photoURL: result.user.photoURL
       });
 
-      try {
-        await createUserProfile(result.user);
-        console.log('User profile created successfully');
-      } catch (profileError) {
-        console.error('Error creating user profile:', profileError);
-        toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
-        throw profileError;
+      // Check if email is missing (Apple "Hide Email" feature)
+      if (!result.user.email) {
+        const userEmail = prompt(
+          '🍎 Apple hat keine E-Mail-Adresse bereitgestellt.\n\n' +
+          'Für Benachrichtigungen benötigen wir deine E-Mail-Adresse.\n\n' +
+          'Bitte gib deine E-Mail-Adresse ein:'
+        );
+
+        if (!userEmail || !userEmail.includes('@')) {
+          toast.error('Eine gültige E-Mail-Adresse ist erforderlich.');
+          await signOut(auth);
+          throw new Error('Email required');
+        }
+
+        // Create profile with provided email
+        try {
+          await createUserProfile(result.user, { email: userEmail });
+          console.log('User profile created with provided email');
+        } catch (profileError) {
+          console.error('Error creating user profile:', profileError);
+          toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
+          await signOut(auth);
+          throw profileError;
+        }
+      } else {
+        try {
+          await createUserProfile(result.user);
+          console.log('User profile created successfully');
+        } catch (profileError) {
+          console.error('Error creating user profile:', profileError);
+          toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
+          throw profileError;
+        }
       }
 
       toast.success('Welcome to VoltFox! 🦊');
