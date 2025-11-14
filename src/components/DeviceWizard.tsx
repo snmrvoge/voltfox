@@ -192,6 +192,24 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
         if (warrantyUntil) deviceData.warrantyUntil = warrantyUntil;
       }
 
+      // Handle multiple batteries
+      if (batteryOption === 'multiple' && batteryCount > 1) {
+        deviceData.batteries = Array.from({ length: batteryCount }, (_, i) => ({
+          id: `battery-${i + 1}`,
+          name: `Akku ${i + 1}`,
+          currentCharge: parseFloat(currentCharge) || 100,
+          health: parseFloat(health) || 100,
+          status: 'healthy',
+          lastCharged: new Date().toISOString()
+        }));
+      } else if (batteryOption === 'drone-controller') {
+        // TODO: Implement separate device creation for drone + controller
+        toast('🚁 Drohne + Controller: Bitte zunächst die Drohne speichern, dann Controller separat hinzufügen', { duration: 5000 });
+      } else if (batteryOption === 'mixed') {
+        // TODO: Implement separate device creation for mixed batteries
+        toast('📷 Verschiedene Akkus: Bitte jedes Gerät separat hinzufügen', { duration: 5000 });
+      }
+
       await addDevice(deviceData);
       successSound();
       toast.success('🎉 Gerät erfolgreich hinzugefügt!');
