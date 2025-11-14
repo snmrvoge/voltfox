@@ -128,7 +128,7 @@ const AdminDashboard: React.FC = () => {
 
           stats.push({
             uid: userId,
-            email: userData.email || 'Unknown',
+            email: userData.email || userData.displayName || 'Apple User (keine E-Mail)',
             deviceCount: devices.length,
             devices,
             isBlocked: userData.isBlocked || false,
@@ -143,7 +143,7 @@ const AdminDashboard: React.FC = () => {
           // Still add the user but with 0 devices
           stats.push({
             uid: userId,
-            email: userData.email || 'Unknown',
+            email: userData.email || userData.displayName || 'Apple User (keine E-Mail)',
             deviceCount: 0,
             devices: [],
             insuranceValue: 0,
@@ -527,6 +527,7 @@ const AdminDashboard: React.FC = () => {
                             color: user.isBlocked ? '#991B1B' : '#2E3A4B',
                             textDecoration: user.isBlocked ? 'line-through' : 'none'
                           }}>
+                            {user.email.includes('Apple User') && '🍎 '}
                             {user.email}
                           </div>
                           <div style={{ fontSize: '0.85rem', color: '#999' }}>
