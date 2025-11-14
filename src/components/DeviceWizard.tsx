@@ -401,7 +401,7 @@ export const DeviceWizard: React.FC<DeviceWizardProps> = ({
                   style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', border: '2px solid #E5E7EB', borderRadius: '10px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <label style={{ marginBottom: '0.5rem', color: '#2E3A4B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   Gesundheit (%)
                   <div style={{ position: 'relative' }}>
                     <Info size={16} style={{ cursor: 'pointer', color: '#3B82F6' }}
