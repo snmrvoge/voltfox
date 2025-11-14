@@ -1,10 +1,10 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  auth, 
+import {
+  auth,
   db,
   googleProvider,
-  appleProvider 
+  appleProvider
 } from '../config/firebase';
 import {
   createUserWithEmailAndPassword,
@@ -25,6 +25,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface UserProfile {
   uid: string;
@@ -76,6 +77,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -217,14 +219,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Check if email is missing (Apple "Hide Email" feature)
       if (!result.user.email) {
-        const userEmail = prompt(
-          '🍎 Apple hat keine E-Mail-Adresse bereitgestellt.\n\n' +
-          'Für Benachrichtigungen benötigen wir deine E-Mail-Adresse.\n\n' +
-          'Bitte gib deine E-Mail-Adresse ein:'
-        );
+        const userEmail = prompt(t('auth.appleEmailPrompt'));
 
         if (!userEmail || !userEmail.includes('@')) {
-          toast.error('Eine gültige E-Mail-Adresse ist erforderlich.');
+          toast.error(t('auth.emailRequired'));
           await signOut(auth);
           throw new Error('Email required');
         }
@@ -235,7 +233,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('User profile created with provided email');
         } catch (profileError) {
           console.error('Error creating user profile:', profileError);
-          toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
+          toast.error(t('auth.profileCreationFailed'));
           await signOut(auth);
           throw profileError;
         }
@@ -245,7 +243,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('User profile created successfully');
         } catch (profileError) {
           console.error('Error creating user profile:', profileError);
-          toast.error('Profil konnte nicht erstellt werden. Bitte kontaktiere den Support.');
+          toast.error(t('auth.profileCreationFailed'));
           throw profileError;
         }
       }

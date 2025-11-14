@@ -131,6 +131,9 @@
     }
   },
   "auth": {
+    "appleEmailPrompt": "🍎 Apple non ha fornito un indirizzo e-mail.\n\nPer le notifiche, abbiamo bisogno del tuo indirizzo e-mail.\n\nInserisci il tuo indirizzo e-mail:",
+    "emailRequired": "È richiesto un indirizzo e-mail valido.",
+    "profileCreationFailed": "Impossibile creare il profilo. Contatta il supporto.",
     "login": {
       "title": "Bentornato!",
       "email": "E-mail",
