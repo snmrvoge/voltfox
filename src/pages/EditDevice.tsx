@@ -1402,6 +1402,7 @@ const EditDevice: React.FC = () => {
           <DeviceHistory
             deviceId={id}
             deviceName={formData.name}
+            device={device}
           />
         )}
 

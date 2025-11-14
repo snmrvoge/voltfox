@@ -18,9 +18,10 @@ import toast from 'react-hot-toast';
 interface DeviceHistoryProps {
   deviceId: string;
   deviceName: string;
+  device?: any; // Full device object for multi-battery support
 }
 
-export const DeviceHistory: React.FC<DeviceHistoryProps> = ({ deviceId, deviceName }) => {
+export const DeviceHistory: React.FC<DeviceHistoryProps> = ({ deviceId, deviceName, device }) => {
   const { currentUser, userProfile } = useAuth();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,16 +68,33 @@ export const DeviceHistory: React.FC<DeviceHistoryProps> = ({ deviceId, deviceNa
   const chargeTrend = calculateTrend('currentCharge');
   const healthTrend = calculateTrend('health');
 
+  // Check if device has multiple batteries
+  const hasBatteries = device?.batteries && device.batteries.length > 0;
+  const batteryColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
   // Prepare chart data
-  const chartData = history.map(entry => ({
-    time: new Date(entry.timestamp).toLocaleDateString('de-DE', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit'
-    }),
-    'Ladung %': entry.currentCharge,
-    'Gesundheit %': entry.health
-  }));
+  const chartData = history.map(entry => {
+    const dataPoint: any = {
+      time: new Date(entry.timestamp).toLocaleDateString('de-DE', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit'
+      })
+    };
+
+    // If device has multiple batteries, show each battery's charge
+    if (hasBatteries) {
+      device.batteries.forEach((battery: any, index: number) => {
+        dataPoint[`${battery.name} %`] = entry.currentCharge || 100;
+      });
+    } else {
+      // Single battery device
+      dataPoint['Ladung %'] = entry.currentCharge;
+      dataPoint['Gesundheit %'] = entry.health;
+    }
+
+    return dataPoint;
+  });
 
   const plan = userProfile?.plan || 'free';
   const isPro = plan === 'pro' || plan === 'business';
@@ -246,22 +264,40 @@ export const DeviceHistory: React.FC<DeviceHistoryProps> = ({ deviceId, deviceNa
               }}
             />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="Ladung %"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="Gesundheit %"
-              stroke="#10B981"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-            />
+            {hasBatteries ? (
+              // Show separate line for each battery
+              device.batteries.map((battery: any, index: number) => (
+                <Line
+                  key={battery.id}
+                  type="monotone"
+                  dataKey={`${battery.name} %`}
+                  stroke={batteryColors[index % batteryColors.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              ))
+            ) : (
+              // Single battery device - show charge and health
+              <>
+                <Line
+                  type="monotone"
+                  dataKey="Ladung %"
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Gesundheit %"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </>
+            )}
           </LineChart>
         </ResponsiveContainer>
       )}
