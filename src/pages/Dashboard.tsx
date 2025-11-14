@@ -8,6 +8,7 @@ import { useDevices } from '../context/DeviceContext';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { APP_VERSION } from '../version';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -444,11 +445,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        <p style={{
+        <div style={{
           marginTop: '3rem',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '1rem',
           fontSize: '0.9rem',
-          color: '#9CA3AF',
-          textAlign: 'center'
+          color: '#9CA3AF'
         }}>
           <a
             href="https://mr-vision.ch"
@@ -464,7 +468,9 @@ export default function Dashboard() {
           >
             {t('common.createdBy')} ✨
           </a>
-        </p>
+          <span style={{ color: '#D1D5DB' }}>•</span>
+          <span style={{ fontSize: '0.8rem', color: '#D1D5DB' }}>v{APP_VERSION}</span>
+        </div>
 
         {/* Lightbox Modal */}
         {lightboxImage && (
