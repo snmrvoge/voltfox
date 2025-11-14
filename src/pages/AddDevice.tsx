@@ -1,7 +1,7 @@
 // src/pages/AddDevice.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Battery, ArrowLeft, Upload, Image as ImageIcon, Sparkles, Search } from 'lucide-react';
+import { Battery, ArrowLeft, Upload, Image as ImageIcon, Sparkles, Search, Camera } from 'lucide-react';
 import { useDevices } from '../context/DeviceContext';
 import { useAuth } from '../context/AuthContext';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
 import { AutocompleteInput } from '../components/AutocompleteInput';
 import { BatteryManager } from '../components/BatteryManager';
+import { BarcodeScanner } from '../components/BarcodeScanner';
 
 interface CommunityDevice {
   id: string;
@@ -58,6 +59,7 @@ const AddDevice: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   // Community device linking
   const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
@@ -266,6 +268,53 @@ const AddDevice: React.FC = () => {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleBarcodeScan = async (barcode: string, result: any) => {
+    console.log('Barcode gescannt:', barcode, result);
+    toast.loading('🔍 Suche Produktinformationen...', { id: 'barcode-lookup' });
+
+    try {
+      // Try to lookup product info from Open Food Facts API or similar
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const data = await response.json();
+
+      if (data.status === 1 && data.product) {
+        const product = data.product;
+
+        // Fill in the form with product data
+        setFormData({
+          ...formData,
+          name: product.product_name || barcode,
+          brand: product.brands || '',
+          model: product.generic_name || '',
+          serialNumber: barcode
+        });
+
+        toast.success('✅ Produkt gefunden!', { id: 'barcode-lookup' });
+      } else {
+        // No product found, just fill in the barcode
+        setFormData({
+          ...formData,
+          serialNumber: barcode,
+          name: `Gerät (${barcode})`
+        });
+
+        toast.success('📦 Barcode gespeichert', { id: 'barcode-lookup' });
+      }
+    } catch (error) {
+      console.error('Barcode lookup error:', error);
+      // Still save the barcode even if lookup fails
+      setFormData({
+        ...formData,
+        serialNumber: barcode,
+        name: `Gerät (${barcode})`
+      });
+
+      toast.success('📦 Barcode gespeichert', { id: 'barcode-lookup' });
+    }
+
+    setShowBarcodeScanner(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -984,30 +1033,54 @@ const AddDevice: React.FC = () => {
                   )}
                 </div>
               )}
-              <label
-                style={{
-                  display: 'block',
-                  padding: '2rem',
-                  background: '#f5f5f5',
-                  border: '2px dashed var(--vf-primary)',
-                  borderRadius: '8px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }}
-              >
-                <Upload size={32} style={{ margin: '0 auto 1rem' }} />
-                <p style={{ color: 'var(--vf-primary)', fontWeight: 600 }}>
-                  {uploadingImage ? 'Wird hochgeladen...' : 'Bild hochladen (max. 5MB)'}
-                </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImage}
-                  style={{ display: 'none' }}
-                />
-              </label>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <label
+                  style={{
+                    flex: 1,
+                    minWidth: '200px',
+                    padding: '2rem',
+                    background: '#f5f5f5',
+                    border: '2px dashed var(--vf-primary)',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Upload size={32} style={{ margin: '0 auto 1rem' }} />
+                  <p style={{ color: 'var(--vf-primary)', fontWeight: 600 }}>
+                    {uploadingImage ? 'Wird hochgeladen...' : 'Bild hochladen (max. 5MB)'}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBarcodeScanner(true)}
+                  style={{
+                    flex: 1,
+                    minWidth: '200px',
+                    padding: '2rem',
+                    background: '#f5f5f5',
+                    border: '2px dashed #10B981',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <Camera size={32} style={{ margin: '0 auto 1rem', color: '#10B981' }} />
+                  <p style={{ color: '#10B981', fontWeight: 600, margin: 0 }}>
+                    📷 Barcode scannen
+                  </p>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1139,6 +1212,14 @@ const AddDevice: React.FC = () => {
           Add Device
         </button>
       </form>
+
+      {/* Barcode Scanner Modal */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onScanSuccess={handleBarcodeScan}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
+      )}
     </div>
   );
 };
