@@ -92,7 +92,10 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-          facingMode: selectedCamera ? undefined : 'environment'
+          facingMode: selectedCamera ? undefined : 'environment',
+          // Limit resolution from the start
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
         }
       });
 
@@ -102,6 +105,8 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         videoRef.current.play();
       }
       setIsScanning(true);
+      console.log('Camera started with resolution:',
+        videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
     } catch (err) {
       console.error('Kamera-Start-Fehler:', err);
       toast.error('Kamera konnte nicht gestartet werden');
@@ -133,9 +138,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     try {
       const canvas = document.createElement('canvas');
 
-      // Limit resolution to max 1920x1080 for faster upload
-      const maxWidth = 1920;
-      const maxHeight = 1080;
+      // Limit resolution to max 1280x720 for faster upload
+      const maxWidth = 1280;
+      const maxHeight = 720;
       let width = videoRef.current.videoWidth;
       let height = videoRef.current.videoHeight;
 
@@ -156,16 +161,18 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0, width, height);
 
-        // Compress to 80% quality for faster upload
+        // Compress to 60% quality for much faster upload
         canvas.toBlob(async (blob) => {
           if (blob) {
-            console.log('Photo size:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+            const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+            const sizeKB = (blob.size / 1024).toFixed(0);
+            console.log('Photo size:', sizeMB, 'MB (', sizeKB, 'KB)');
+            toast.loading(`Uploading ${sizeKB}KB...`, { id: 'upload-progress' });
             const file = new File([blob], `device-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
             await stopScanning();
             onPhotoCapture(file);
-            toast.success('📸 Foto aufgenommen!');
           }
-        }, 'image/jpeg', 0.8); // Reduced from 0.95 to 0.8
+        }, 'image/jpeg', 0.6); // Reduced from 0.8 to 0.6 for faster upload
       }
     } catch (err) {
       console.error('Foto-Aufnahme-Fehler:', err);

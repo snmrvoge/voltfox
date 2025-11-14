@@ -330,6 +330,8 @@ const AddDevice: React.FC = () => {
 
     setUploadingImage(true);
     try {
+      toast.loading('⬆️ Uploading...', { id: 'upload-progress' });
+
       const timestamp = Date.now();
       const fileName = `${timestamp}_${imageFile.name}`;
       const storagePath = `device-images/${currentUser.uid}/new/${fileName}`;
@@ -341,13 +343,13 @@ const AddDevice: React.FC = () => {
       setFormData({ ...formData, imageUrl: url, icon: '' });
       setImageSource('upload');
 
-      toast.success('Bild erfolgreich hochgeladen!');
+      toast.success('✅ Upload complete!', { id: 'upload-progress' });
 
       // Now analyze with AI
       await handleAIAnalysisWithFile(imageFile);
     } catch (error: any) {
       console.error('Upload Fehler:', error);
-      toast.error('Fehler beim Hochladen');
+      toast.error('❌ Upload failed', { id: 'upload-progress' });
     } finally {
       setUploadingImage(false);
     }
