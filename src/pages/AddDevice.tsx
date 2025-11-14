@@ -62,6 +62,8 @@ const AddDevice: React.FC = () => {
   const [aiResult, setAiResult] = useState<any>(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showWizard, setShowWizard] = useState(true);
+  const [showPhotoPreviewQuestion, setShowPhotoPreviewQuestion] = useState(false);
+  const [capturedPhotoUrl, setCapturedPhotoUrl] = useState('');
 
   // Community device linking
   const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
@@ -443,6 +445,12 @@ const AddDevice: React.FC = () => {
         `✅ Gerät erkannt: ${updates.name || 'Unbekannt'}`,
         { id: 'ai-analysis', duration: 3000 }
       );
+
+      // Show photo preview question
+      if (formData.imageUrl) {
+        setCapturedPhotoUrl(formData.imageUrl);
+        setShowPhotoPreviewQuestion(true);
+      }
     } catch (error: any) {
       console.error('AI Analysis Error:', error);
       toast.error(error.message || 'KI-Analyse fehlgeschlagen', { id: 'ai-analysis' });
@@ -1376,6 +1384,96 @@ const AddDevice: React.FC = () => {
           onPhotoCapture={handlePhotoCapture}
           onClose={() => setShowBarcodeScanner(false)}
         />
+      )}
+
+      {/* Photo Preview Question Modal */}
+      {showPhotoPreviewQuestion && capturedPhotoUrl && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '20px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            animation: 'slideIn 0.3s ease-out'
+          }}>
+            <h2 style={{ textAlign: 'center', color: '#2E3A4B', marginBottom: '1rem', fontSize: '1.5rem' }}>
+              📸 Foto als Übersichtsbild verwenden?
+            </h2>
+
+            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+              <img src={capturedPhotoUrl} alt="Captured device"
+                style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '12px', objectFit: 'contain' }} />
+            </div>
+
+            <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>
+              Möchtest du dieses Foto als Übersichtsbild für dein Gerät verwenden?
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <button onClick={() => {
+                setFormData({ ...formData, imageUrl: '', icon: formData.icon || '🔋' });
+                setShowPhotoPreviewQuestion(false);
+                toast.success('Foto nicht verwendet - Icon wird benutzt');
+              }}
+                style={{
+                  padding: '1rem',
+                  background: '#E5E7EB',
+                  color: '#2E3A4B',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#D1D5DB'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#E5E7EB'}>
+                Nein, danke
+              </button>
+
+              <button onClick={() => {
+                setShowPhotoPreviewQuestion(false);
+                toast.success('✅ Foto wird als Übersichtsbild verwendet!');
+              }}
+                style={{
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                }}>
+                Ja, verwenden
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
