@@ -11,25 +11,39 @@ Kompletter Neuschrieb des DeviceWizard mit besserem UX-Flow und Struktur.
 
 ## Neuer Flow (v1.1.0)
 
+**WICHTIG:** Flow ab Schritt 3 ist IDENTISCH für alle drei Methoden!
+
 ### Schritt 1: Choose Method
-- ✅ Bereits gut
 - Community (Grün) - "Schnellste"
 - Kamera/KI (Blau) - "Smart"
 - Manuell (Orange) - "Flexibel"
 
-### Schritt 2: Minimal Info
-- ✅ Name + Icon + Typ
-- Text ändern: "Im nächsten Schritt kannst du speichern oder Details hinzufügen"
+### Schritt 2: Data Input (unterschiedlich je nach Methode)
 
-### Schritt 3: Save or Continue
-- ✅ Bereits gut
+**2a) Community:**
+- Gerät aus Liste wählen
+- Alle Daten automatisch übernommen
+- → Direkt zu Schritt 3
+
+**2b) Kamera/KI:**
+- Foto aufnehmen
+- KI analysiert → Daten vorausgefüllt
+- **FRAGE:** "Foto als Übersichtsbild verwenden?" (Ja/Nein)
+- → Zu Schritt 3 (mit vorausgefüllten Daten)
+
+**2c) Manuell:**
+- Name + Icon + Typ eingeben
+- Text: "Im nächsten Schritt kannst du speichern oder Details hinzufügen"
+- → Zu Schritt 3
+
+### Schritt 3: Save or Continue (IDENTISCH FÜR ALLE)
 - Icon-Vorschau mit Name
 - 2 Buttons: "Jetzt speichern" vs "Details hinzufügen"
 - Option: "Speichern & weiteres Gerät"
 
-### **NEUE STRUKTUR AB HIER:**
+### **AB HIER: IDENTISCHER FLOW FÜR ALLE METHODEN**
 
-### Schritt 4: Current Status (NEU)
+### Schritt 4: Current Status (NEU - IDENTISCH)
 **Titel:** "📊 Aktueller Status"
 **Text:** "Wie ist der Zustand deines Akkus?"
 
