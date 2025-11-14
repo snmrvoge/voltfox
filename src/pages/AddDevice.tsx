@@ -12,6 +12,7 @@ import { analyzeDeviceImage, mapToDeviceType } from '../utils/aiService';
 import { AutocompleteInput } from '../components/AutocompleteInput';
 import { BatteryManager } from '../components/BatteryManager';
 import { BarcodeScanner } from '../components/BarcodeScanner';
+import { DeviceWizard } from '../components/DeviceWizard';
 
 interface CommunityDevice {
   id: string;
@@ -60,6 +61,7 @@ const AddDevice: React.FC = () => {
   const [showInsuranceFields, setShowInsuranceFields] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showWizard, setShowWizard] = useState(true);
 
   // Community device linking
   const [communityDevices, setCommunityDevices] = useState<CommunityDevice[]>([]);
@@ -600,12 +602,29 @@ const AddDevice: React.FC = () => {
         <ArrowLeft size={20} />
         Zurück zu Geräten
       </button>
-      <div className="page-header">
-        <h1>🦊 Neues Gerät hinzufügen</h1>
-        <p>Starte die Überwachung deiner Batterie</p>
-      </div>
 
-      <form onSubmit={handleSubmit} className="device-form">
+      {showWizard ? (
+        <DeviceWizard
+          onCommunitySearch={() => {
+            setShowWizard(false);
+            setShowCommunitySearch(true);
+          }}
+          onCameraCapture={() => {
+            setShowWizard(false);
+            setShowBarcodeScanner(true);
+          }}
+          onManualEntry={() => {
+            setShowWizard(false);
+          }}
+        />
+      ) : (
+        <>
+          <div className="page-header">
+            <h1>🦊 Neues Gerät hinzufügen</h1>
+            <p>Starte die Überwachung deiner Batterie</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="device-form">
         <div className="form-group">
           <label>
             <Battery size={20} />
@@ -1347,6 +1366,8 @@ const AddDevice: React.FC = () => {
           Add Device
         </button>
       </form>
+        </>
+      )}
 
       {/* Camera Scanner Modal */}
       {showBarcodeScanner && (
