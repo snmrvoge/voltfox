@@ -337,7 +337,9 @@ const AddDevice: React.FC = () => {
     setUploadingImage(true);
     try {
       console.log('🔄 Starting upload...');
-      toast.loading('⬆️ Uploading...', { id: 'upload-progress' });
+      console.log('Storage bucket:', storage.app.options.storageBucket);
+
+      toast.loading('📸 Foto wird verarbeitet...', { id: 'upload-progress' });
 
       const timestamp = Date.now();
       const fileName = `${timestamp}_${imageFile.name}`;
@@ -347,18 +349,24 @@ const AddDevice: React.FC = () => {
       const storageRef = ref(storage, storagePath);
 
       console.log('⬆️ Uploading to Firebase Storage...');
+      toast.loading('⬆️ Bild wird hochgeladen...', { id: 'upload-progress' });
+
       await uploadBytes(storageRef, imageFile);
 
       console.log('✅ Upload complete, getting URL...');
+      toast.loading('📥 Bild wird gespeichert...', { id: 'upload-progress' });
+
       const url = await getDownloadURL(storageRef);
       console.log('🔗 Download URL:', url);
 
       setFormData({ ...formData, imageUrl: url, icon: '' });
       setImageSource('upload');
 
-      toast.success('✅ Upload complete!', { id: 'upload-progress' });
+      toast.success('✅ Bild hochgeladen!', { id: 'upload-progress', duration: 1000 });
 
       console.log('🤖 Starting AI analysis...');
+      toast.loading('🤖 KI analysiert dein Gerät...', { id: 'ai-analysis' });
+
       // Now analyze with AI
       await handleAIAnalysisWithFile(imageFile);
     } catch (error: any) {
@@ -366,17 +374,25 @@ const AddDevice: React.FC = () => {
       console.error('Error details:', {
         code: error?.code,
         message: error?.message,
-        name: error?.name
+        name: error?.name,
+        serverResponse: error?.serverResponse
       });
 
-      let errorMessage = '❌ Upload failed';
+      let errorMessage = '❌ Upload fehlgeschlagen';
       if (error?.code === 'storage/unauthorized') {
-        errorMessage = '❌ Keine Berechtigung. Firebase Storage Rules prüfen!';
+        errorMessage = '❌ Keine Berechtigung zum Hochladen';
+      } else if (error?.code === 'storage/object-not-found') {
+        errorMessage = '❌ Storage Bucket nicht gefunden';
+      } else if (error?.message?.includes('CORS')) {
+        errorMessage = '❌ CORS-Fehler - bitte Storage Bucket prüfen';
       } else if (error?.message) {
-        errorMessage = `❌ ${error.message}`;
+        errorMessage = `❌ Fehler: ${error.message}`;
       }
 
-      toast.error(errorMessage, { id: 'upload-progress', duration: 5000 });
+      toast.error(errorMessage, { id: 'upload-progress', duration: 10000 });
+
+      // Show storage bucket info for debugging
+      console.error('Storage bucket config:', storage.app.options.storageBucket);
     } finally {
       setUploadingImage(false);
       console.log('🏁 Upload process finished');
