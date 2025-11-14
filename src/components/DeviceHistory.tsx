@@ -221,6 +221,22 @@ export const DeviceHistory: React.FC<DeviceHistoryProps> = ({ deviceId, deviceNa
         </div>
       </div>
 
+      {/* Multi-Battery Info Note */}
+      {hasBatteries && (
+        <div style={{
+          padding: '1rem',
+          background: '#FFF8F3',
+          borderRadius: '8px',
+          border: '2px solid #FFD23F',
+          marginBottom: '1.5rem'
+        }}>
+          <p style={{ margin: 0, color: '#92400E', fontSize: '0.9rem' }}>
+            💡 <strong>Mehrere Akkus erkannt:</strong> Aktuell wird der Gesamtladestand angezeigt.
+            Die individuelle Verfolgung jedes Akkus kommt in einem zukünftigen Update!
+          </p>
+        </div>
+      )}
+
       {/* Chart */}
       {loading ? (
         <div style={{
