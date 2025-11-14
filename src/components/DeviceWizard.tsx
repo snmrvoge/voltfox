@@ -1,4 +1,5 @@
 // src/components/DeviceWizard.tsx - v1.1.0
+// Force rebuild - fixed TypeScript errors
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Camera, Edit3, ArrowRight, ArrowLeft, Check, Plus, Sparkles, Battery, Save, Info, DollarSign, Zap } from 'lucide-react';
